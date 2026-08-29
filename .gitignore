@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+
+# Secrets / local state
+.env
+.env.*
+!.env.example
+
+# Local memory data (never committed)
+.mnemos/
+*.mne
+
+# OS
+.DS_Store
+Thumbs.db
