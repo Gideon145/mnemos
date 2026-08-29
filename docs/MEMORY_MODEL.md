@@ -60,6 +60,27 @@ question ──► classify (preference | agreement | decision | fact)
                           └── still low ──► "I don't remember" (never fabricate)
 ```
 
+## Agreement state machine (dynamic storage)
+
+Agreements are the flagship dynamic-storage pattern. One entity per agreement,
+with `state` evolving on the critical path:
+
+```
+draft ──confirm──► agreed ──delegate──► delegated ──outcome──► delivered ──pay──► paid
+```
+
+- Each transition = `set_entity` update + `write_event` journal entry
+- The payment gate reads `state` and `amount` from memory at execution time
+- No memory → no agreement → no payment (the deletion test)
+- References link agreements to remembered preferences ("use my remembered
+  style guide") so memory entities compose, they don't just sit
+
+## Coordination
+
+Two or more agents (Mnemos + Virtuals specialists) share state exclusively
+through Sibyl tiers. Task state, handoffs, and outcomes are memory records.
+There is no coordination path outside memory.
+
 ## Anti-goals
 
 - No hidden cloud copy of user memory
