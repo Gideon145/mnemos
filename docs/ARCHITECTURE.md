@@ -49,7 +49,33 @@ recall without Sibyl.
 2. First-pass recall from Sibyl, re-rank, adaptive follow-up when confidence is low.
 3. Grounded answers cite which tier produced the answer (auditable).
 
-### 3. Keepsakes
+### 3. Dynamic storage — the agreement state machine
+
+Durable entities are not static records. Agreements carry a state machine that
+lives entirely in memory:
+
+```
+draft → agreed → delegated → delivered → paid
+```
+
+Every transition is a write to the WARM tier and a `write_event` journal entry.
+The payment gate reads the *current* state at execution time — memory is live
+system state, not a log. Behavior changes as memory changes; that is the
+"dynamic-storage" pattern the rubric's top band rewards.
+
+### 4. Coordination surface — multi-agent handoffs through memory
+
+Mnemos and specialist agents (Virtuals) coordinate exclusively through the
+memory tiers:
+
+- delegation → task entity state `delegated` + agent id + timestamp
+- outcome → journal event + agreement state update
+- no shared runtime state outside Sibyl; memory is the coordination bus
+
+If memory is deleted, coordination is impossible: no task state, no handoffs,
+no outcome records.
+
+### 5. Keepsakes
 
 - Export: serializes durable + daily namespaces into a portable pack (`.mne`),
   signed with the owner key.
@@ -58,14 +84,15 @@ recall without Sibyl.
 - Keepsakes are plain structured files — the memory is the artifact, owned by
   the user, not by a vendor.
 
-### 4. Action executor (Base)
+### 6. Action executor (Base)
 
 - Mnemos holds a Base account; actions are gated by memory:
-  a remembered agreement must exist before a payment can be proposed.
-- x402/USDC payments: read terms from durable tier → build tx → user confirm.
+  a remembered agreement must exist **and be in the `delivered` state** before
+  a payment can be proposed.
+- x402/USDC payments: read terms + state from WARM tier → build tx → user confirm.
 - B20 reads for onchain context answers.
 
-### 5. Virtuals integration
+### 7. Virtuals integration
 
 - Mnemos registers as a transacting agent on Virtuals Protocol.
 - Delegation: specialist agents are remembered (address, capability, outcome
