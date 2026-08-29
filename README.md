@@ -29,6 +29,12 @@ layer and Mnemos cannot recall preferences, cannot resolve agreements, and
 cannot execute remembered payments. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 for the exact read/write call sites.
 
+**Past table stakes:** recall is the floor. Mnemos also runs a memory-resident
+**agreement state machine** (dynamic storage: `draft → agreed → delegated →
+delivered → paid`) and a **coordination surface** where Mnemos and specialist
+agents hand work off through memory alone. The payment gate executes only when
+the remembered agreement says so.
+
 ## Stacks
 
 | Stack | Role |
