@@ -62,6 +62,9 @@ def _describe(record: dict[str, Any]) -> str:
         body_text = "; ".join(f"{key}={value}" for key, value in body.items())
     else:
         body_text = str(body) if body else ""
+    body_text = " ".join(body_text.split())
+    if len(body_text) > 140:
+        body_text = body_text[:137].rstrip() + "..."
     suffix = f" ({status})" if status else ""
     return f"{category} {name}{suffix}: {body_text}".strip()
 
