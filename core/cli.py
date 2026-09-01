@@ -10,6 +10,7 @@ import re
 from pathlib import Path
 
 from .agent import RecallEngine
+from .agent.recap import recap
 from .memory.agreement import Agreement, AgreementError
 from .memory.gate import evaluate_payment
 from .memory.keepsake import export_keepsake, import_keepsake
@@ -46,6 +47,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     journal = sub.add_parser("journal", help="append an entry to the daily log")
     journal.add_argument("text", nargs="+")
+
+    recap_cmd = sub.add_parser("recap", help="summarize the journal and agreements")
+    recap_cmd.add_argument("--since", default=None)
+    recap_cmd.add_argument("--limit", type=int, default=20)
 
     agree = sub.add_parser("agree", help="create an agreement and mark it agreed")
     agree.add_argument("name")
@@ -108,6 +113,11 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "journal":
             store.record_event(acted=[" ".join(args.text)])
             print("journaled")
+            return 0
+
+        if args.command == "recap":
+            result = recap(store, since=args.since, limit=args.limit)
+            print(result.text)
             return 0
 
         if args.command == "agree":
