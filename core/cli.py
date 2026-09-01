@@ -13,6 +13,10 @@ from .agent import RecallEngine
 from .memory.agreement import Agreement, AgreementError
 from .memory.gate import evaluate_payment
 from .memory.keepsake import export_keepsake, import_keepsake
+from .memory.reflection import accept as accept_proposal
+from .memory.reflection import pending as pending_proposals
+from .memory.reflection import reflect as run_reflection
+from .memory.reflection import reject as reject_proposal
 from .memory.store import MemoryStore
 
 DEFAULT_DB = str(Path.home() / ".mnemos" / "memory.db")
@@ -65,6 +69,18 @@ def build_parser() -> argparse.ArgumentParser:
 
     import_ = keepsake_sub.add_parser("import", help="merge a .mne pack into memory")
     import_.add_argument("path")
+
+    reflect = sub.add_parser("reflect", help="detect repeated patterns in the journal")
+    reflect.add_argument("--since", default=None)
+    reflect.add_argument("--min-hits", type=int, default=2)
+
+    proposals = sub.add_parser("proposals", help="list pending proposals")
+
+    accept = sub.add_parser("accept", help="promote a proposal to an active preference")
+    accept.add_argument("name")
+
+    reject = sub.add_parser("reject", help="archive a proposal")
+    reject.add_argument("name")
 
     return parser
 
@@ -142,6 +158,41 @@ def main(argv: list[str] | None = None) -> int:
                 f"keepsake merged: {summary.get('entities_imported', 0)} entities, "
                 f"{summary.get('events_imported', 0)} events"
             )
+            return 0
+
+        if args.command == "reflect":
+            report = run_reflection(
+                store, since=args.since, min_hits=args.min_hits
+            )
+            print(
+                f"scanned {report['events_scanned']} journal events, "
+                f"wrote {len(report['proposals'])} proposals"
+            )
+            for name in report["proposals"]:
+                print(f"  {name}")
+            return 0
+
+        if args.command == "proposals":
+            records = pending_proposals(store)
+            for record in records:
+                print(f"  {record.get('name')}")
+            if not records:
+                print("(no pending proposals)")
+            return 0
+
+        if args.command == "accept":
+            accepted = accept_proposal(store, args.name)
+            if accepted is None:
+                print(f"no proposal named {args.name!r}")
+                return 1
+            print(f"accepted {args.name}")
+            return 0
+
+        if args.command == "reject":
+            if not reject_proposal(store, args.name):
+                print(f"no proposal named {args.name!r}")
+                return 1
+            print(f"rejected {args.name}")
             return 0
 
         parser.error(f"unknown command {args.command!r}")
