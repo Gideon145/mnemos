@@ -10,6 +10,8 @@ import re
 from pathlib import Path
 
 from .agent import RecallEngine
+from .memory.agreement import Agreement, AgreementError
+from .memory.gate import evaluate_payment
 from .memory.store import MemoryStore
 
 DEFAULT_DB = str(Path.home() / ".mnemos" / "memory.db")
@@ -40,6 +42,20 @@ def build_parser() -> argparse.ArgumentParser:
     journal = sub.add_parser("journal", help="append an entry to the daily log")
     journal.add_argument("text", nargs="+")
 
+    agree = sub.add_parser("agree", help="create an agreement and mark it agreed")
+    agree.add_argument("name")
+    agree.add_argument("--with", dest="counterparty", help="counterparty")
+    agree.add_argument("--amount", type=float, help="agreed amount")
+    agree.add_argument("--note")
+
+    advance = sub.add_parser("advance", help="move an agreement one state forward")
+    advance.add_argument("name")
+    advance.add_argument("--to", required=True, help="target state")
+
+    pay = sub.add_parser("pay", help="pay against a remembered agreement")
+    pay.add_argument("name")
+    pay.add_argument("amount", type=float)
+
     return parser
 
 
@@ -67,6 +83,40 @@ def main(argv: list[str] | None = None) -> int:
             store.record_event(acted=[" ".join(args.text)])
             print("journaled")
             return 0
+
+        if args.command == "agree":
+            agreement = Agreement(
+                store,
+                args.name,
+                amount=args.amount,
+                counterparty=args.counterparty,
+                note=args.note,
+            )
+            agreement.advance("agreed")
+            print(f"agreement {args.name} is agreed")
+            return 0
+
+        if args.command == "advance":
+            agreement = Agreement.open(store, args.name)
+            if agreement is None:
+                print(f"no agreement named {args.name!r}")
+                return 1
+            try:
+                agreement.advance(args.to)
+            except AgreementError as error:
+                print(f"refused: {error}")
+                return 1
+            print(f"agreement {args.name} is now {agreement.state}")
+            return 0
+
+        if args.command == "pay":
+            result = evaluate_payment(store, args.name, args.amount)
+            print(f"gate: {result.reason}")
+            if result.allowed:
+                print("payment authorized (executor not wired yet)")
+                return 0
+            print("payment refused")
+            return 1
 
         parser.error(f"unknown command {args.command!r}")
         return 2
