@@ -11,6 +11,7 @@ from pathlib import Path
 
 from .agent import RecallEngine
 from .agent.recap import recap
+from .integrations import register_with_virtuals
 from .memory.agreement import Agreement, AgreementError
 from .memory.keepsake import export_keepsake, import_keepsake
 from .payments import BaseExecutor, DryRunExecutor, pay
@@ -51,6 +52,9 @@ def build_parser() -> argparse.ArgumentParser:
     recap_cmd = sub.add_parser("recap", help="summarize the journal and agreements")
     recap_cmd.add_argument("--since", default=None)
     recap_cmd.add_argument("--limit", type=int, default=20)
+
+    register = sub.add_parser("register", help="record this agent's identity")
+    register.add_argument("--as", dest="name", default="mnemos")
 
     agree = sub.add_parser("agree", help="create an agreement and mark it agreed")
     agree.add_argument("name")
@@ -124,6 +128,11 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "recap":
             result = recap(store, since=args.since, limit=args.limit)
             print(result.text)
+            return 0
+
+        if args.command == "register":
+            result = register_with_virtuals(store, name=args.name)
+            print(f"registration: {result.note}")
             return 0
 
         if args.command == "agree":
