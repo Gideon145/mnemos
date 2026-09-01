@@ -12,6 +12,7 @@ from pathlib import Path
 from .agent import RecallEngine
 from .memory.agreement import Agreement, AgreementError
 from .memory.gate import evaluate_payment
+from .memory.keepsake import export_keepsake, import_keepsake
 from .memory.store import MemoryStore
 
 DEFAULT_DB = str(Path.home() / ".mnemos" / "memory.db")
@@ -55,6 +56,15 @@ def build_parser() -> argparse.ArgumentParser:
     pay = sub.add_parser("pay", help="pay against a remembered agreement")
     pay.add_argument("name")
     pay.add_argument("amount", type=float)
+
+    keepsake = sub.add_parser("keepsake", help="portable memory packs")
+    keepsake_sub = keepsake.add_subparsers(dest="keepsake_command", required=True)
+
+    export = keepsake_sub.add_parser("export", help="write memory to a .mne pack")
+    export.add_argument("path")
+
+    import_ = keepsake_sub.add_parser("import", help="merge a .mne pack into memory")
+    import_.add_argument("path")
 
     return parser
 
@@ -117,6 +127,22 @@ def main(argv: list[str] | None = None) -> int:
                 return 0
             print("payment refused")
             return 1
+
+        if args.command == "keepsake":
+            if args.keepsake_command == "export":
+                summary = export_keepsake(store, args.path)
+                print(
+                    f"keepsake written to {summary['path']} "
+                    f"({summary['entities']} entities, "
+                    f"{summary['events']} events)"
+                )
+                return 0
+            summary = import_keepsake(store, args.path)
+            print(
+                f"keepsake merged: {summary.get('entities_imported', 0)} entities, "
+                f"{summary.get('events_imported', 0)} events"
+            )
+            return 0
 
         parser.error(f"unknown command {args.command!r}")
         return 2
