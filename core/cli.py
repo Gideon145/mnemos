@@ -12,8 +12,8 @@ from pathlib import Path
 from .agent import RecallEngine
 from .agent.recap import recap
 from .memory.agreement import Agreement, AgreementError
-from .memory.gate import evaluate_payment
 from .memory.keepsake import export_keepsake, import_keepsake
+from .payments import BaseExecutor, DryRunExecutor, pay
 from .memory.reflection import accept as accept_proposal
 from .memory.reflection import pending as pending_proposals
 from .memory.reflection import reflect as run_reflection
@@ -65,6 +65,7 @@ def build_parser() -> argparse.ArgumentParser:
     pay = sub.add_parser("pay", help="pay against a remembered agreement")
     pay.add_argument("name")
     pay.add_argument("amount", type=float)
+    pay.add_argument("--live", action="store_true", help="submit on Base Sepolia")
 
     keepsake = sub.add_parser("keepsake", help="portable memory packs")
     keepsake_sub = keepsake.add_subparsers(dest="keepsake_command", required=True)
@@ -146,10 +147,18 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.command == "pay":
-            result = evaluate_payment(store, args.name, args.amount)
-            print(f"gate: {result.reason}")
-            if result.allowed:
-                print("payment authorized (executor not wired yet)")
+            executor = BaseExecutor() if args.live else DryRunExecutor()
+            try:
+                outcome = pay(store, args.name, args.amount, executor=executor)
+            except RuntimeError as error:
+                print(f"executor error: {error}")
+                return 1
+            print(f"gate: {outcome.reason}")
+            if outcome.allowed:
+                detail = f"payment sent ({outcome.executor})"
+                if outcome.transaction:
+                    detail += f" tx={outcome.transaction}"
+                print(detail)
                 return 0
             print("payment refused")
             return 1
