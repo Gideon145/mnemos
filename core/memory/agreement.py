@@ -1,6 +1,6 @@
 """Agreement entities with an explicit state machine.
 
-States advance in order and never move backward::
+States advance one step at a time, never backward and never skipping::
 
     draft -> agreed -> delegated -> delivered -> paid
 
@@ -79,6 +79,11 @@ class Agreement:
             raise AgreementError(
                 f"cannot move agreement from {self.state!r} to {next_state!r}"
             )
+        if _ORDER[next_state] != _ORDER[self.state] + 1:
+            raise AgreementError(
+                f"cannot skip from {self.state!r} to {next_state!r}; "
+                "advance one state at a time"
+            )
         record = self.store.remember_durable(
             _CATEGORY,
             self.name,
@@ -90,4 +95,19 @@ class Agreement:
             acted=[f"agreement {self.name}: {self.state} -> {next_state}"],
         )
         self._record = record
+        return record
+
+    def note_delegation(self, agent_id: str, task: str) -> dict[str, Any]:
+        """Record who the work was handed to and what they owe."""
+        body = dict(self.body)
+        body["delegated_to"] = agent_id
+        body["task"] = task
+        record = self.store.remember_durable(
+            _CATEGORY, self.name, body, status=self.state
+        )
+        self._record = record
+        self.store.record_event(
+            evaluated={"agreement": self.name, "agent": agent_id},
+            acted=[f"delegated {self.name} to {agent_id}: {task}"],
+        )
         return record

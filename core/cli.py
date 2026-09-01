@@ -62,6 +62,11 @@ def build_parser() -> argparse.ArgumentParser:
     advance.add_argument("name")
     advance.add_argument("--to", required=True, help="target state")
 
+    delegate = sub.add_parser("delegate", help="hand an agreement's work to an agent")
+    delegate.add_argument("name")
+    delegate.add_argument("--to", required=True, dest="agent_id")
+    delegate.add_argument("--task", required=True)
+
     pay = sub.add_parser("pay", help="pay against a remembered agreement")
     pay.add_argument("name")
     pay.add_argument("amount", type=float)
@@ -144,6 +149,20 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"refused: {error}")
                 return 1
             print(f"agreement {args.name} is now {agreement.state}")
+            return 0
+
+        if args.command == "delegate":
+            agreement = Agreement.open(store, args.name)
+            if agreement is None:
+                print(f"no agreement named {args.name!r}")
+                return 1
+            try:
+                agreement.note_delegation(args.agent_id, args.task)
+                agreement.advance("delegated")
+            except AgreementError as error:
+                print(f"refused: {error}")
+                return 1
+            print(f"delegated {args.name} to {args.agent_id}")
             return 0
 
         if args.command == "pay":
