@@ -10,6 +10,17 @@ take it anywhere.
 Built for the **Sibyl Labs Hackathon** (build window Sep 1-10, 2026).
 Team: **The Muses**.
 
+![Mnemos banner](docs/images/banner.jpg)
+
+## Why
+
+Old computers had almost no RAM, and memory is what held them back,
+not CPU power. The same is happening with agents: models keep getting
+smarter while memory still gets lost or costs tokens.
+
+Mnemos is the RAM upgrade for agents. The full case is in
+[docs/PMF.md](docs/PMF.md).
+
 ## What it does
 
 - **Remembers you, honestly.** Recall answers only from what memory actually
