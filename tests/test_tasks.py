@@ -60,7 +60,6 @@ def test_unfinished_lists_work_first_and_skips_completed(tmp_path):
         done = Task(store, "done-a")
         done.advance("working")
         done.advance("blocked")
-        done.advance("working")
         done.advance("completed")
 
         names = [task["name"] for task in unfinished(store)]
