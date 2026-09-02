@@ -7,5 +7,6 @@ from __future__ import annotations
 
 from .recall import RecallAnswer, RecallEngine
 from .recap import Recap, recap
+from .replay import Replay, replay
 
-__all__ = ["RecallAnswer", "RecallEngine", "Recap", "recap"]
+__all__ = ["RecallAnswer", "RecallEngine", "Recap", "recap", "Replay", "replay"]
