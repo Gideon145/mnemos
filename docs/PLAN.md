@@ -26,8 +26,8 @@ Build window: **Sep 1–10, 2026**. Team: The Muses.
 
 ## Submission checklist
 
-- [ ] Public repo, MIT, real commit history
-- [ ] README with load-bearing memory map (judges can find call sites in <2 min)
+- [x] Public repo, MIT, real commit history
+- [x] README with load-bearing memory map (judges can find call sites in <2 min)
 - [ ] 2–5 min demo with cold-start recall beat
 - [ ] Two public posts tagging @sibylcap + partners
-- [ ] Prior Work declaration (see docs/PRIOR_WORK.md)
+- [x] Prior Work declaration (see docs/PRIOR_WORK.md)
