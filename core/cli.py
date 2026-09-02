@@ -14,6 +14,7 @@ from .agent.recap import recap
 from .integrations import register_with_virtuals
 from .memory.agreement import Agreement, AgreementError
 from .memory.keepsake import export_keepsake, import_keepsake
+from .memory.tasks import Task, TaskError, unfinished
 from .payments import BaseExecutor, DryRunExecutor, pay
 from .memory.reflection import accept as accept_proposal
 from .memory.reflection import pending as pending_proposals
@@ -70,6 +71,24 @@ def build_parser() -> argparse.ArgumentParser:
     delegate.add_argument("name")
     delegate.add_argument("--to", required=True, dest="agent_id")
     delegate.add_argument("--task", required=True)
+
+    task = sub.add_parser("task", help="create a task that survives restarts")
+    task.add_argument("name")
+    task.add_argument("objective", nargs="*")
+
+    tasks = sub.add_parser("tasks", help="list all tasks")
+    tasks.add_argument("--open", action="store_true", dest="open_only")
+
+    work = sub.add_parser("work", help="mark a task working (or clear a blocker)")
+    work.add_argument("name")
+
+    block = sub.add_parser("block", help="mark a task blocked")
+    block.add_argument("name")
+
+    complete = sub.add_parser("complete", help="mark a task completed")
+    complete.add_argument("name")
+
+    resume = sub.add_parser("resume", help="show unfinished work, work first")
 
     pay = sub.add_parser("pay", help="pay against a remembered agreement")
     pay.add_argument("name")
@@ -172,6 +191,47 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"refused: {error}")
                 return 1
             print(f"delegated {args.name} to {args.agent_id}")
+            return 0
+
+        if args.command == "task":
+            objective = " ".join(args.objective) or None
+            Task(store, args.name, objective=objective)
+            print(f"task {args.name} queued")
+            return 0
+
+        if args.command == "tasks":
+            records = store.list_durable("task")
+            for record in records:
+                if args.open_only and record.get("status") == "completed":
+                    continue
+                body = record.get("body") or {}
+                objective = body.get("objective") or ""
+                print(f"  {record.get('name')} ({record.get('status')}): {objective}")
+            return 0
+
+        if args.command in ("work", "block", "complete"):
+            target = {"work": "working", "block": "blocked", "complete": "completed"}[args.command]
+            task = Task.open(store, args.name)
+            if task is None:
+                print(f"no task named {args.name!r}")
+                return 1
+            try:
+                task.advance(target)
+            except TaskError as error:
+                print(f"refused: {error}")
+                return 1
+            print(f"task {args.name} is now {task.state}")
+            return 0
+
+        if args.command == "resume":
+            records = unfinished(store)
+            if not records:
+                print("nothing unfinished")
+                return 0
+            for record in records:
+                body = record.get("body") or {}
+                objective = body.get("objective") or ""
+                print(f"  {record.get('name')} ({record.get('status')}): {objective}")
             return 0
 
         if args.command == "pay":
