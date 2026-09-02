@@ -53,7 +53,7 @@ def _lesson_line(record: dict[str, Any]) -> str:
     body = record.get("body") or {}
     severity = body.get("severity", "medium")
     value = body.get("value", "")
-    return f"- ({severity}) {value}"
+    return f"({severity}) {value}"
 
 
 def recap(

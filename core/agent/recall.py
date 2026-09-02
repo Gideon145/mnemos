@@ -34,8 +34,15 @@ class RecallAnswer:
     sources: tuple[str, ...] = field(default_factory=tuple)
 
 
+def _stem(word: str) -> str:
+    for suffix in ("ing", "ed", "es", "s"):
+        if word.endswith(suffix) and len(word) - len(suffix) >= 3:
+            return word[: -len(suffix)]
+    return word
+
+
 def _tokenize(text: str) -> set[str]:
-    return {match.group(0).lower() for match in _WORD.finditer(text)}
+    return {_stem(match.group(0).lower()) for match in _WORD.finditer(text)}
 
 
 def _entity_text(record: dict[str, Any]) -> str:
