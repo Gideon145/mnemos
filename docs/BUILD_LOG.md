@@ -18,3 +18,20 @@ Started the in-window build. Phase 1 memory core was finished and pushed, then t
 34 tests passing. Sibyl SDK pinned to 0.8.0.
 
 Public post: https://x.com/mnemos_agent/status/2094635080257868128
+
+## Day 2 (Sep 2, 2026)
+
+Closed the gaps against the strongest competitor we found, and shipped the failure-memory idea:
+
+- tasks as durable entities: queued, working, blocked, completed, with resume for unfinished work
+- replay: the causal chain for any remembered subject, oldest first
+- lessons: failures stored with severity, surfaced by recall and recap
+- doctor: the deletion test as a command, proves memory is load-bearing
+- handoff: one pack carries memory from agent A to agent B
+- recall: stemmed tokens and identity triggers so reworded questions still find their facts
+- pyproject.toml: real pip install and a mnemos console script
+- README rewritten around the load-bearing map
+
+51 tests passing.
+
+Public post: https://x.com/mnemos_agent/status/2094996926517092619
