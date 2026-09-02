@@ -70,12 +70,14 @@ mnemos doctor
 ```
 
 `pay` is dry-run by default and journals everything. With `--live` and
-`MNEMOS_PAYER_KEY` set, it submits a real transaction on Base Sepolia.
+`MNEMOS_PAYER_KEY` set, it submits a real transaction on Base.
+
+A live Base mainnet payment from a memory-gated decision is recorded in
+[docs/VERIFICATION.md](docs/VERIFICATION.md), with the explorer link.
 
 ## Honest status
 
-- Base Sepolia execution path is implemented; a live demo needs a funded
-  testnet key (`web3` installed, `MNEMOS_PAYER_KEY` set).
+- Base execution is verified live on mainnet (see above).
 - Virtuals registration records the agent identity in memory; the live
   registration call is pending API credentials.
 - No semantic search. Recall uses Sibyl's FTS plus a deterministic lexical
@@ -88,6 +90,7 @@ mnemos doctor
 - [Build plan](docs/PLAN.md)
 - [Build log](docs/BUILD_LOG.md)
 - [Demo script](docs/DEMO_SCRIPT.md)
+- [Verification](docs/VERIFICATION.md)
 - [Prior work declaration](docs/PRIOR_WORK.md)
 
 ## License
