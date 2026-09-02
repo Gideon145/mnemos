@@ -24,7 +24,7 @@ from typing import Any
 
 from sibyl_memory_client import MemoryClient
 
-DURABLE_CATEGORIES = ("preference", "agreement", "identity", "task")
+DURABLE_CATEGORIES = ("preference", "agreement", "identity", "task", "lesson")
 
 
 class MemoryStore:
