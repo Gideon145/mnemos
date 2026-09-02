@@ -14,6 +14,7 @@ from .agent.recap import recap
 from .agent.replay import replay
 from .integrations import register_with_virtuals
 from .memory.agreement import Agreement, AgreementError
+from .memory.doctor import run_doctor
 from .memory.keepsake import export_keepsake, import_keepsake
 from .memory.lessons import SEVERITIES, learn, lessons
 from .memory.tasks import Task, TaskError, unfinished
@@ -100,6 +101,8 @@ def build_parser() -> argparse.ArgumentParser:
     learn_cmd.add_argument("--severity", default="medium", choices=SEVERITIES)
 
     lessons_cmd = sub.add_parser("lessons", help="list every remembered lesson")
+
+    doctor = sub.add_parser("doctor", help="prove memory is load-bearing")
 
     pay = sub.add_parser("pay", help="pay against a remembered agreement")
     pay.add_argument("name")
@@ -275,6 +278,14 @@ def main(argv: list[str] | None = None) -> int:
             if not records:
                 print("(no lessons)")
             return 0
+
+        if args.command == "doctor":
+            report = run_doctor()
+            for name, ok, detail in report.checks:
+                mark = "ok" if ok else "FAIL"
+                print(f"  [{mark}] {name}: {detail}")
+            print("memory is load-bearing" if report.healthy else "memory is broken")
+            return 0 if report.healthy else 1
 
         if args.command == "pay":
             executor = BaseExecutor() if args.live else DryRunExecutor()
