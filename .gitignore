@@ -15,6 +15,7 @@ node_modules/
 .env.*
 !.env.example
 .mnemos-payer.key
+.mnemos-payee.key
 
 # Local memory data (never committed)
 .mnemos/
