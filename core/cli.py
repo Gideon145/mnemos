@@ -15,6 +15,7 @@ from .agent.replay import replay
 from .integrations import register_with_virtuals
 from .memory.agreement import Agreement, AgreementError
 from .memory.keepsake import export_keepsake, import_keepsake
+from .memory.lessons import SEVERITIES, learn, lessons
 from .memory.tasks import Task, TaskError, unfinished
 from .payments import BaseExecutor, DryRunExecutor, pay
 from .memory.reflection import accept as accept_proposal
@@ -93,6 +94,12 @@ def build_parser() -> argparse.ArgumentParser:
     complete.add_argument("name")
 
     resume = sub.add_parser("resume", help="show unfinished work, work first")
+
+    learn_cmd = sub.add_parser("learn", help="record a lesson from a failure")
+    learn_cmd.add_argument("text", nargs="+")
+    learn_cmd.add_argument("--severity", default="medium", choices=SEVERITIES)
+
+    lessons_cmd = sub.add_parser("lessons", help="list every remembered lesson")
 
     pay = sub.add_parser("pay", help="pay against a remembered agreement")
     pay.add_argument("name")
@@ -252,6 +259,21 @@ def main(argv: list[str] | None = None) -> int:
                 body = record.get("body") or {}
                 objective = body.get("objective") or ""
                 print(f"  {record.get('name')} ({record.get('status')}): {objective}")
+            return 0
+
+        if args.command == "learn":
+            text = " ".join(args.text)
+            learn(store, text, severity=args.severity)
+            print(f"learned ({args.severity})")
+            return 0
+
+        if args.command == "lessons":
+            records = lessons(store)
+            for record in records:
+                body = record.get("body") or {}
+                print(f"  ({body.get('severity', 'medium')}) {body.get('value', '')}")
+            if not records:
+                print("(no lessons)")
             return 0
 
         if args.command == "pay":

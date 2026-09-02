@@ -49,6 +49,13 @@ def _agreement_line(record: dict[str, Any]) -> str:
     return " ".join(bits)
 
 
+def _lesson_line(record: dict[str, Any]) -> str:
+    body = record.get("body") or {}
+    severity = body.get("severity", "medium")
+    value = body.get("value", "")
+    return f"- ({severity}) {value}"
+
+
 def recap(
     store: MemoryStore,
     *,
@@ -58,6 +65,7 @@ def recap(
     events = list(reversed(store.timeline(since=since, limit=limit)))
     agreements = store.list_durable("agreement")
     preferences = store.list_durable("preference")
+    lessons = store.list_durable("lesson")
 
     lines = ["Mnemos recap", ""]
     if events:
@@ -72,6 +80,11 @@ def recap(
         lines.extend(f"- {_agreement_line(record)}" for record in agreements)
     else:
         lines.append("No agreements on record.")
+    lines.append("")
+
+    if lessons:
+        lines.append("Lessons:")
+        lines.extend(f"- {_lesson_line(record)}" for record in lessons)
 
     return Recap(
         text="\n".join(lines),
