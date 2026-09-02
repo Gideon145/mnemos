@@ -17,6 +17,9 @@ dependencies = [
 dev = [
     "pytest",
 ]
+payments = [
+    "web3>=7",
+]
 
 [project.scripts]
 mnemos = "core.cli:main"
