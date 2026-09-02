@@ -11,6 +11,7 @@ from pathlib import Path
 
 from .agent import RecallEngine
 from .agent.recap import recap
+from .agent.replay import replay
 from .integrations import register_with_virtuals
 from .memory.agreement import Agreement, AgreementError
 from .memory.keepsake import export_keepsake, import_keepsake
@@ -53,6 +54,9 @@ def build_parser() -> argparse.ArgumentParser:
     recap_cmd = sub.add_parser("recap", help="summarize the journal and agreements")
     recap_cmd.add_argument("--since", default=None)
     recap_cmd.add_argument("--limit", type=int, default=20)
+
+    replay_cmd = sub.add_parser("replay", help="show the causal chain for a subject")
+    replay_cmd.add_argument("subject")
 
     register = sub.add_parser("register", help="record this agent's identity")
     register.add_argument("--as", dest="name", default="mnemos")
@@ -128,12 +132,24 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "remember":
             name = _slug(args.text)
             store.remember_durable(args.category, name, {"value": args.text})
+            store.record_event(
+                evaluated={"category": args.category, "name": name},
+                acted=[f"remembered {args.category} {name}"],
+            )
             print(f"remembered {args.category} {name}")
             return 0
 
         if args.command == "ask":
             question = " ".join(args.question)
             answer = RecallEngine(store).ask(question)
+            store.record_event(
+                evaluated={
+                    "question": question,
+                    "found": answer.found_anything,
+                    "sources": list(answer.sources),
+                },
+                acted=[f"asked: {question}"],
+            )
             print(answer.answer)
             if not answer.found_anything:
                 print("(nothing in memory)")
@@ -147,6 +163,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "recap":
             result = recap(store, since=args.since, limit=args.limit)
             print(result.text)
+            return 0
+
+        if args.command == "replay":
+            print(replay(store, args.subject).text)
             return 0
 
         if args.command == "register":
