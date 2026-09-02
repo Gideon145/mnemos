@@ -7,9 +7,6 @@ Mnemos is a local-first personal agent whose durable memory runs on
 preferences, agreements, lessons, tasks — lives in memory you own, and you can
 take it anywhere.
 
-Built for the **Sibyl Labs Hackathon** (build window Sep 1-10, 2026).
-Team: **The Muses**.
-
 ![Mnemos banner](docs/images/banner.jpg)
 
 ## Why
