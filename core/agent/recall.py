@@ -22,6 +22,10 @@ from ..memory.store import DURABLE_CATEGORIES, MemoryStore
 
 _WORD = re.compile(r"[a-zA-Z0-9]{3,}")
 
+# Question tokens that make identity records relevant regardless of
+# lexical overlap: "who am i", "my name", "your name", and friends.
+_IDENTITY_TRIGGERS = {"who", "you", "your", "name", "identit"}
+
 
 @dataclass(frozen=True)
 class RecallAnswer:
@@ -110,6 +114,15 @@ class RecallEngine:
                 if score:
                     seen.add(key)
                     matches.append((score, record))
+
+        # Pass 3: questions about the user always surface identity.
+        if tokens & _IDENTITY_TRIGGERS:
+            for record in self._store.list_durable("identity"):
+                key = (str(record.get("category")), str(record.get("name")))
+                if key in seen:
+                    continue
+                seen.add(key)
+                matches.append((1, record))
 
         if not matches:
             return RecallAnswer(
