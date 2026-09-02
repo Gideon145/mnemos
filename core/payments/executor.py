@@ -66,27 +66,55 @@ class DryRunExecutor:
         }
 
 
-class BaseExecutor:
-    """Submits a real transaction on Base Sepolia."""
+NETWORKS = {
+    "sepolia": {"rpc": "https://sepolia.base.org", "chain_id": 84532},
+    "mainnet": {"rpc": "https://mainnet.base.org", "chain_id": 8453},
+}
 
-    name = "base-sepolia"
+
+def _resolve_key(value: str) -> str:
+    """Env value may be a raw hex key or a path to a key file."""
+    candidate = os.path.expanduser(value)
+    if os.path.isfile(candidate):
+        return open(candidate, encoding="utf-8").read().strip()
+    return value
+
+
+class BaseExecutor:
+    """Submits a real transaction on Base."""
 
     def __init__(
         self,
         *,
         private_key: str | None = None,
-        rpc_url: str = "https://sepolia.base.org",
+        network: str = "sepolia",
     ) -> None:
-        self._private_key = private_key or os.environ.get("MNEMOS_PAYER_KEY")
-        self._rpc_url = rpc_url
+        if network not in NETWORKS:
+            raise RuntimeError(f"unknown network {network!r}")
+        config = NETWORKS[network]
+        self.name = f"base-{network}"
+        self._rpc_url = config["rpc"]
+        self._chain_id = config["chain_id"]
+        self._private_key = _resolve_key(
+            private_key or os.environ.get("MNEMOS_PAYER_KEY") or ""
+        )
         if not self._private_key:
             raise RuntimeError(
                 "BaseExecutor needs a private key: set MNEMOS_PAYER_KEY"
             )
-        # The env var may point at a key file instead of holding the key.
-        candidate = os.path.expanduser(self._private_key)
-        if os.path.isfile(candidate):
-            self._private_key = open(candidate, encoding="utf-8").read().strip()
+        payee = os.environ.get("MNEMOS_PAYEE_ADDRESS")
+        self._payee = payee or None
+        payee_file = os.environ.get("MNEMOS_PAYEE_KEY")
+        if not self._payee and payee_file:
+            candidate = os.path.expanduser(payee_file)
+            if os.path.isfile(candidate):
+                try:
+                    from eth_account import Account
+
+                    raw = open(candidate, encoding="utf-8").read().strip()
+                    self._payee = Account.from_key(raw).address
+                except Exception:  # pragma: no cover
+                    self._payee = None
 
     def submit(self, intent: PaymentIntent) -> dict[str, Any]:
         try:
@@ -101,23 +129,24 @@ class BaseExecutor:
             raise RuntimeError(f"cannot reach {self._rpc_url}")
 
         account = w3.eth.account.from_key(self._private_key)
-        wei = int(intent.amount * 1_000_000_000)  # 1 unit = 1 gwei on testnet
+        wei = int(intent.amount * 1_000_000_000)  # 1 unit = 1 gwei
+        to_address = self._payee or account.address
         tx = {
             "from": account.address,
-            "to": account.address,
+            "to": to_address,
             "value": wei,
             "gas": 21000,
             "maxFeePerGas": w3.eth.gas_price,
             "maxPriorityFeePerGas": 0,
             "nonce": w3.eth.get_transaction_count(account.address),
-            "chainId": w3.eth.chain_id,
+            "chainId": self._chain_id,
         }
         signed = account.sign_transaction(tx)
         tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
         return {
             "transaction": tx_hash.hex(),
             "network": self._rpc_url,
-            "note": f"sent {intent.amount} units from {account.address}",
+            "note": f"sent {intent.amount} units from {account.address} to {to_address}",
         }
 
 

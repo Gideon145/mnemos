@@ -108,7 +108,13 @@ def build_parser() -> argparse.ArgumentParser:
     pay = sub.add_parser("pay", help="pay against a remembered agreement")
     pay.add_argument("name")
     pay.add_argument("amount", type=float)
-    pay.add_argument("--live", action="store_true", help="submit on Base Sepolia")
+    pay.add_argument("--live", action="store_true", help="submit a real tx")
+    pay.add_argument(
+        "--network",
+        choices=("sepolia", "mainnet"),
+        default="sepolia",
+        help="which Base network (default: sepolia)",
+    )
 
     keepsake = sub.add_parser("keepsake", help="portable memory packs")
     keepsake_sub = keepsake.add_subparsers(dest="keepsake_command", required=True)
@@ -293,7 +299,9 @@ def main(argv: list[str] | None = None) -> int:
             return 0 if report.healthy else 1
 
         if args.command == "pay":
-            executor = BaseExecutor() if args.live else DryRunExecutor()
+            executor = (
+                BaseExecutor(network=args.network) if args.live else DryRunExecutor()
+            )
             try:
                 outcome = pay(store, args.name, args.amount, executor=executor)
             except RuntimeError as error:
