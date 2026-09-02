@@ -136,8 +136,8 @@ class BaseExecutor:
             "to": to_address,
             "value": wei,
             "gas": 21000,
-            "maxFeePerGas": w3.eth.gas_price,
-            "maxPriorityFeePerGas": 0,
+            "maxFeePerGas": int(w3.eth.gas_price * 1.5),
+            "maxPriorityFeePerGas": 1_000_000,  # 0.001 gwei tip
             "nonce": w3.eth.get_transaction_count(account.address),
             "chainId": self._chain_id,
         }
