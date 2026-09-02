@@ -83,6 +83,10 @@ class BaseExecutor:
             raise RuntimeError(
                 "BaseExecutor needs a private key: set MNEMOS_PAYER_KEY"
             )
+        # The env var may point at a key file instead of holding the key.
+        candidate = os.path.expanduser(self._private_key)
+        if os.path.isfile(candidate):
+            self._private_key = open(candidate, encoding="utf-8").read().strip()
 
     def submit(self, intent: PaymentIntent) -> dict[str, Any]:
         try:
