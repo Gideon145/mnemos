@@ -16,6 +16,7 @@ from .integrations import register_with_virtuals
 from .memory.agreement import Agreement, AgreementError
 from .memory.doctor import run_doctor
 from .memory.keepsake import export_keepsake, import_keepsake
+from .memory.handoff import handoff
 from .memory.lessons import SEVERITIES, learn, lessons
 from .memory.tasks import Task, TaskError, unfinished
 from .payments import BaseExecutor, DryRunExecutor, pay
@@ -117,6 +118,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     import_ = keepsake_sub.add_parser("import", help="merge a .mne pack into memory")
     import_.add_argument("path")
+
+    handoff_cmd = sub.add_parser("handoff", help="give another agent your memory")
+    handoff_cmd.add_argument("path")
+    handoff_cmd.add_argument("--to", dest="recipient", default=None)
 
     reflect = sub.add_parser("reflect", help="detect repeated patterns in the journal")
     reflect.add_argument("--since", default=None)
@@ -318,6 +323,13 @@ def main(argv: list[str] | None = None) -> int:
                 f"keepsake merged: {summary.get('entities_imported', 0)} entities, "
                 f"{summary.get('events_imported', 0)} events"
             )
+            return 0
+
+        if args.command == "handoff":
+            summary = handoff(store, args.path, recipient=args.recipient)
+            who = summary["recipient"] or "another agent"
+            print(f"handed {summary['path']} to {who}")
+            print(f"recipient runs: {summary['import_command']}")
             return 0
 
         if args.command == "reflect":
