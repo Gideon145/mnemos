@@ -2,52 +2,92 @@
 
 > **Forgetting is a bug. Mnemos is the fix.**
 
-Mnemos is a local-first personal AI agent whose durable memory runs on
+Mnemos is a local-first personal agent whose durable memory runs on
 [Sibyl Memory](https://docs.sibyllabs.org/memory/). Everything you tell it —
-preferences, agreements, decisions, tastes — lives in a memory you own, and you
-can take it anywhere.
+preferences, agreements, lessons, tasks — lives in memory you own, and you can
+take it anywhere.
 
-Built for the **Sibyl Labs Hackathon** (build window Sep 1–10, 2026).
+Built for the **Sibyl Labs Hackathon** (build window Sep 1-10, 2026).
 Team: **The Muses**.
 
 ## What it does
 
-- **Remembers you.** Durable facts, day-to-day context, and decisions are
-  written to Sibyl Memory and recalled across sessions and machines.
-- **Keepsakes.** One-command portable memory packs. Export what Mnemos has
-  learned, import it anywhere, and a fresh agent recalls you instantly.
-- **Acts on memory.** Mnemos holds an onchain wallet on Base and executes
-  x402/USDC payments from remembered agreements — "pay him $40/hr for 4 hours,
-  as we agreed."
-- **Runs as an agent.** Registered as a transacting agent on Virtuals Protocol,
-  able to delegate to specialist agents and remember the outcomes.
+- **Remembers you, honestly.** Recall answers only from what memory actually
+  holds, and says so when it holds nothing.
+- **Agreements with teeth.** A state machine (`draft -> agreed -> delegated ->
+  delivered -> paid`) that moves one step at a time, never backward.
+- **Memory-gated payments.** Nothing pays out unless a remembered, delivered
+  agreement covers the amount. The gate reads memory before it allows anything.
+- **Keepsakes.** One command exports everything into a portable `.mne` pack.
+  A fresh agent on a fresh machine imports it and remembers you.
+- **Lessons.** Failures are stored with severity, so the same mistake stays
+  wrong only once.
+- **Tasks that survive restarts.** `resume` lists unfinished work, work first.
+- **Causal replay.** Every write, recall, and refusal is journaled. `replay`
+  shows the chain that changed a decision.
+- **The deletion test, on demand.** `doctor` proves memory is load-bearing.
 
-## Where memory is load-bearing
+## Install
 
-Sibyl Memory is on the critical path of every core function. Delete the Sibyl
-layer and Mnemos cannot recall preferences, cannot resolve agreements, and
-cannot execute remembered payments. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-for the exact read/write call sites.
+```bash
+pip install .
+mnemos --db ~/.mnemos/memory.db remember "I like short direct answers"
+mnemos ask "how do I like answers?"
+```
 
-**Past table stakes:** recall is the floor. Mnemos also runs a memory-resident
-**agreement state machine** (dynamic storage: `draft → agreed → delegated →
-delivered → paid`) and a **coordination surface** where Mnemos and specialist
-agents hand work off through memory alone. The payment gate executes only when
-the remembered agreement says so.
+## The load-bearing map
 
-## Stacks
+Every capability below breaks without Sibyl Memory. Judges can reach any call
+site in under two minutes.
 
-| Stack | Role |
-|---|---|
-| **Sibyl Memory** | Durable memory system of record (mandatory core) |
-| **Base** | Deployment + onchain agent actions (x402/USDC, B20 reads) |
-| **Virtuals Protocol** | Agent runtime, registration, coordination |
+| Capability | Command | Where the memory call lives |
+|---|---|---|
+| Durable facts | `mnemos remember` / `ask` | `core/memory/store.py` |
+| Honest recall | `mnemos ask` | `core/agent/recall.py` |
+| Agreements | `mnemos agree` / `advance` / `delegate` | `core/memory/agreement.py` |
+| Payment gate | `mnemos pay` | `core/memory/gate.py`, `core/payments/executor.py` |
+| Portable memory | `mnemos keepsake export/import` | `core/memory/keepsake.py` |
+| Lessons | `mnemos learn` / `lessons` | `core/memory/lessons.py` |
+| Tasks | `mnemos task` / `work` / `block` / `resume` | `core/memory/tasks.py` |
+| Causal replay | `mnemos replay` | `core/agent/replay.py` |
+| Day summary | `mnemos recap` | `core/agent/recap.py` |
+| Reflection | `mnemos reflect` / `proposals` / `accept` | `core/memory/reflection.py` |
+| Deletion test | `mnemos doctor` | `core/memory/doctor.py` |
 
-## Quick links
+## The proof in one take
+
+```bash
+mnemos remember "I like short direct answers; contractor rate is 40 per hour"
+mnemos agree contractor --with alice --amount 160
+mnemos delegate contractor --to agent-42 --task "fix the fence"
+mnemos keepsake export my-mnemos.mne
+# fresh machine, fresh install
+mnemos keepsake import my-mnemos.mne
+mnemos ask "how do I like answers and what is the contractor rate"
+mnemos advance contractor --to delivered
+mnemos pay contractor 160
+mnemos doctor
+```
+
+`pay` is dry-run by default and journals everything. With `--live` and
+`MNEMOS_PAYER_KEY` set, it submits a real transaction on Base Sepolia.
+
+## Honest status
+
+- Base Sepolia execution path is implemented; a live demo needs a funded
+  testnet key (`web3` installed, `MNEMOS_PAYER_KEY` set).
+- Virtuals registration records the agent identity in memory; the live
+  registration call is pending API credentials.
+- No semantic search. Recall uses Sibyl's FTS plus a deterministic lexical
+  fallback, on purpose.
+
+## Docs
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Memory model](docs/MEMORY_MODEL.md)
 - [Build plan](docs/PLAN.md)
+- [Build log](docs/BUILD_LOG.md)
+- [Demo script](docs/DEMO_SCRIPT.md)
 - [Prior work declaration](docs/PRIOR_WORK.md)
 
 ## License
