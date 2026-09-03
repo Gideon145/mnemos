@@ -10,6 +10,14 @@ from core.integrations.virtuals import (
 from core.memory.store import MemoryStore
 
 
+@pytest.fixture(autouse=True)
+def clear_virtuals_env(monkeypatch):
+    """The live env vars must never leak into tests."""
+    for name in ("VIRTUALS_API_KEY", "VIRTUALS_COMPUTE_URL", "VIRTUALS_MODEL"):
+        monkeypatch.delenv(name, raising=False)
+    yield
+
+
 class FakeClient:
     def __init__(self, api_key):
         self.api_key = api_key

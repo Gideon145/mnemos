@@ -36,8 +36,14 @@ def _game_client(api_key: str) -> Any:
 
 
 def _acp_transport(endpoint: str, api_key: str, payload: dict[str, Any]) -> Any:
+    base = endpoint.rstrip("/")
+    url = (
+        base + "/chat/completions"
+        if base.endswith("/v1")
+        else base + "/v1/chat/completions"
+    )
     request = urllib.request.Request(
-        f"{endpoint.rstrip('/')}/v1/chat/completions",
+        url,
         data=json.dumps(payload).encode("utf-8"),
         headers={
             "Content-Type": "application/json",
