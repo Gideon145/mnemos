@@ -53,3 +53,19 @@ def learn(
 
 def lessons(store: MemoryStore) -> list[dict[str, Any]]:
     return store.list_durable(_CATEGORY)
+
+
+def resolve(store: MemoryStore, name: str) -> dict[str, Any] | None:
+    """Mark a lesson as resolved, so it stops vetoing actions."""
+    record = store.recall_durable(_CATEGORY, name)
+    if record is None:
+        return None
+    body = dict(record.get("body") or {})
+    body["resolved"] = True
+    body["resolved_at"] = datetime.now(timezone.utc).isoformat()
+    store.remember_durable(_CATEGORY, name, body, status=record.get("status"))
+    store.record_event(
+        evaluated={"lesson": name},
+        acted=[f"resolved lesson {name}"],
+    )
+    return store.recall_durable(_CATEGORY, name)
