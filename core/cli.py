@@ -17,7 +17,7 @@ from .memory.agreement import Agreement, AgreementError
 from .memory.doctor import run_doctor
 from .memory.keepsake import export_keepsake, import_keepsake
 from .memory.handoff import handoff
-from .memory.lessons import SEVERITIES, learn, lessons
+from .memory.lessons import SEVERITIES, learn, lessons, resolve
 from .memory.links import link
 from .memory.tasks import Task, TaskError, unfinished
 from .payments import BaseExecutor, DryRunExecutor, pay
@@ -103,6 +103,9 @@ def build_parser() -> argparse.ArgumentParser:
     learn_cmd.add_argument("--severity", default="medium", choices=SEVERITIES)
 
     lessons_cmd = sub.add_parser("lessons", help="list every remembered lesson")
+
+    resolve_cmd = sub.add_parser("resolve", help="mark a lesson resolved, clearing its veto")
+    resolve_cmd.add_argument("name")
 
     link_cmd = sub.add_parser("link", help="link two durable entities both ways")
     link_cmd.add_argument("category_a")
@@ -295,6 +298,14 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"  ({body.get('severity', 'medium')}) {body.get('value', '')}")
             if not records:
                 print("(no lessons)")
+            return 0
+
+        if args.command == "resolve":
+            record = resolve(store, args.name)
+            if record is None:
+                print(f"no lesson named {args.name!r}")
+                return 1
+            print(f"resolved lesson {args.name}")
             return 0
 
         if args.command == "link":
