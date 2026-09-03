@@ -6,11 +6,13 @@ agreement was not delivered, and executed once it was.
 
 ## The transaction
 
-- Explorer: https://basescan.org/tx/0x6c4688248c06d91ef23548d7916124737aef981e6564c73df8e491808e8fa6bf
-- Network: Base mainnet (chain id 8453), block 50775746
+- Explorer: https://basescan.org/tx/0xb685f5fd1c9aa52f356d1c62bdf29776ace0355e59004b037d0017e7e6d68a84
+- Network: Base mainnet (chain id 8453), block 50812564
 - From (Mnemos payer): 0x800709d50ccb0780DF35670D04d584B95adC7ef7
 - To (contractor): 0xFb50Ae86438Ad67bb382d63fB1881302316BD76b
 - Value: 160 gwei, status 1, 21000 gas
+
+An earlier proof transaction from the same flow: https://basescan.org/tx/0x6c4688248c06d91ef23548d7916124737aef981e6564c73df8e491808e8fa6bf
 
 ## The decision, from memory
 
