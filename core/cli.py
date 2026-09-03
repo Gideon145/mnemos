@@ -66,6 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
     register = sub.add_parser("register", help="record this agent's identity")
     register.add_argument("--as", dest="name", default="mnemos")
     register.add_argument("--live", action="store_true", help="create the agent on Virtuals")
+    register.add_argument("--agent-id", dest="agent_id", default=None, help="record a console-created agent id")
 
     dispatch = sub.add_parser("dispatch", help="send a task to the remembered Virtuals agent")
     dispatch.add_argument("task", nargs="+")
@@ -207,7 +208,9 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.command == "register":
             try:
-                result = register_with_virtuals(store, name=args.name, live=args.live)
+                result = register_with_virtuals(
+                    store, name=args.name, live=args.live, agent_id=args.agent_id
+                )
             except RuntimeError as error:
                 print(f"registration failed: {error}")
                 return 1

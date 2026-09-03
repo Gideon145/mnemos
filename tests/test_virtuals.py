@@ -82,6 +82,67 @@ def test_dispatch_uses_remembered_agent_id(tmp_path):
         store.close()
 
 
+def test_console_agent_id_is_recorded(tmp_path):
+    store = MemoryStore(tmp_path / "memory.db")
+    try:
+        result = register_with_virtuals(store, agent_id="console-agent-9")
+        assert result.registered is True
+        assert result.agent_id == "console-agent-9"
+        record = store.recall_durable("identity", "virtuals_agent")
+        assert record["body"]["registered"] is True
+    finally:
+        store.close()
+
+
+def test_acp_dispatch_calls_the_compute_endpoint(tmp_path):
+    store = MemoryStore(tmp_path / "memory.db")
+    try:
+        register_with_virtuals(store, agent_id="console-agent-9")
+        sent = {}
+
+        def fake_transport(endpoint, api_key, payload):
+            sent["endpoint"] = endpoint
+            sent["payload"] = payload
+            return {"choices": [{"message": {"content": "done"}}]}
+
+        result = dispatch_to_virtuals(
+            store,
+            "fix the fence",
+            api_key="fake-key",
+            endpoint="https://compute.example",
+            transport=fake_transport,
+        )
+        assert sent["endpoint"] == "https://compute.example"
+        assert "fix the fence" in sent["payload"]["messages"][0]["content"]
+        assert result["response"]["choices"][0]["message"]["content"] == "done"
+    finally:
+        store.close()
+
+
+def test_acp_dispatch_journals(tmp_path):
+    store = MemoryStore(tmp_path / "memory.db")
+    try:
+        register_with_virtuals(store, agent_id="console-agent-9")
+
+        def fake_transport(endpoint, api_key, payload):
+            return {"choices": []}
+
+        dispatch_to_virtuals(
+            store,
+            "fix the fence",
+            api_key="fake-key",
+            endpoint="https://compute.example",
+            transport=fake_transport,
+        )
+        assert any(
+            "dispatched to virtuals agent console-agent-9" in line
+            for event in store.timeline(limit=5)
+            for line in _acted_lines(event)
+        )
+    finally:
+        store.close()
+
+
 def test_dispatch_without_registration_raises(tmp_path):
     store = MemoryStore(tmp_path / "memory.db")
     try:

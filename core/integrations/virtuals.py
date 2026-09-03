@@ -1,17 +1,22 @@
 """Virtuals registration and dispatch with memory write-back.
 
-The agent registers itself with Virtuals through the GAME SDK v2, then
-remembers its own agent id as a durable identity entity. The id lives
-in memory, not in process: every later run reads it back from the
-store, so a fresh Mnemos still knows which agent it is and can dispatch
-work to it.
+Two live paths are supported:
 
-Memory stays honest: without an API key the identity records a dry-run
-attempt and never claims to be registered.
+- Console (ACP): the agent is created in the Virtuals console and its
+  id is recorded with `--agent-id`. Dispatch calls the agent's compute
+  endpoint (OpenAI-compatible) with the API key generated in the
+  console's Compute settings.
+- GAME SDK v2: `register --live` creates the agent through the legacy
+  SDK and dispatch sets a worker task.
+
+Either way the agent id lives in memory, not in process: a fresh
+Mnemos reads it back from the store before acting.
 """
 from __future__ import annotations
 
+import json
 import os
+import urllib.request
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -21,12 +26,27 @@ _IDENTITY = "identity"
 _AGENT_NAME = "virtuals_agent"
 
 ClientFactory = Callable[[str], Any]
+Transport = Callable[[str, str, dict[str, Any]], Any]
 
 
 def _game_client(api_key: str) -> Any:
     from game_sdk.game.api_v2 import GAMEClientV2
 
     return GAMEClientV2(api_key)
+
+
+def _acp_transport(endpoint: str, api_key: str, payload: dict[str, Any]) -> Any:
+    request = urllib.request.Request(
+        f"{endpoint.rstrip('/')}/v1/chat/completions",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=60) as response:
+        return json.loads(response.read().decode("utf-8"))
 
 
 @dataclass(frozen=True)
@@ -42,9 +62,31 @@ def register_with_virtuals(
     name: str = "mnemos",
     api_key: str | None = None,
     live: bool = False,
+    agent_id: str | None = None,
     client_factory: ClientFactory | None = None,
 ) -> Registration:
     api_key = api_key or os.environ.get("VIRTUALS_API_KEY")
+
+    if agent_id:
+        store.remember_durable(
+            _IDENTITY,
+            _AGENT_NAME,
+            {
+                "requested_name": name,
+                "agent_id": agent_id,
+                "registered": True,
+                "note": "created in the virtuals console",
+            },
+        )
+        store.record_event(
+            evaluated={"platform": "virtuals", "agent_id": agent_id},
+            acted=[f"virtuals registration: console agent {agent_id}"],
+        )
+        return Registration(
+            registered=True,
+            note=f"recorded console agent {agent_id}",
+            agent_id=agent_id,
+        )
 
     if live:
         if not api_key:
@@ -103,7 +145,10 @@ def dispatch_to_virtuals(
     task: str,
     *,
     api_key: str | None = None,
+    endpoint: str | None = None,
+    model: str | None = None,
     client_factory: ClientFactory | None = None,
+    transport: Transport | None = None,
 ) -> dict[str, Any]:
     """Send a task to the remembered Virtuals agent, from memory."""
     identity = store.recall_durable(_IDENTITY, _AGENT_NAME)
@@ -115,6 +160,25 @@ def dispatch_to_virtuals(
         return {"note": "identity exists but is not registered; nothing sent"}
 
     api_key = api_key or os.environ.get("VIRTUALS_API_KEY")
+    endpoint = endpoint or os.environ.get("VIRTUALS_COMPUTE_URL")
+
+    if endpoint:
+        if not api_key:
+            raise RuntimeError("ACP dispatch needs VIRTUALS_API_KEY")
+        payload = {
+            "messages": [{"role": "user", "content": task}],
+        }
+        model = model or os.environ.get("VIRTUALS_MODEL")
+        if model:
+            payload["model"] = model
+        send = transport or _acp_transport
+        result = send(endpoint, api_key, payload)
+        store.record_event(
+            evaluated={"platform": "virtuals", "agent_id": agent_id, "task": task},
+            acted=[f"dispatched to virtuals agent {agent_id}: {task}"],
+        )
+        return {"agent_id": agent_id, "response": result}
+
     if not api_key:
         raise RuntimeError("dispatch needs VIRTUALS_API_KEY")
     client = (client_factory or _game_client)(api_key)
