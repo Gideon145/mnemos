@@ -35,3 +35,17 @@ Closed the gaps against the strongest competitor we found, and shipped the failu
 51 tests passing.
 
 Public post: https://x.com/mnemos_agent/status/2094996926517092619
+
+## Day 3 (Sep 3, 2026)
+
+Memory became the authority over real money.
+
+- the payment gate executed a live transaction on Base mainnet: same request refused while the agreement was only agreed, then executed once delivered (block 50812564, link in docs/VERIFICATION.md)
+- network flag and a real counterparty payee, so the payment goes to the contractor, not to ourselves
+- relational breadcrumbs: mnemos link connects any two durable entities both ways
+- docs lead with the three features users actually name: learns you, near-perfect recall, never hallucinates
+- pmf case, submission copy, and the readme banner written early
+
+55 tests passing.
+
+Public post: https://x.com/mnemos_agent/status/2095390120341811415
