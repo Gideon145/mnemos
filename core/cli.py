@@ -13,6 +13,7 @@ from .agent import RecallEngine
 from .agent.recap import recap
 from .agent.replay import replay
 from .integrations import register_with_virtuals
+from .integrations.virtuals import dispatch_to_virtuals
 from .memory.agreement import Agreement, AgreementError
 from .memory.doctor import run_doctor
 from .memory.keepsake import export_keepsake, import_keepsake
@@ -64,6 +65,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     register = sub.add_parser("register", help="record this agent's identity")
     register.add_argument("--as", dest="name", default="mnemos")
+    register.add_argument("--live", action="store_true", help="create the agent on Virtuals")
+
+    dispatch = sub.add_parser("dispatch", help="send a task to the remembered Virtuals agent")
+    dispatch.add_argument("task", nargs="+")
 
     agree = sub.add_parser("agree", help="create an agreement and mark it agreed")
     agree.add_argument("name")
@@ -201,8 +206,22 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.command == "register":
-            result = register_with_virtuals(store, name=args.name)
+            try:
+                result = register_with_virtuals(store, name=args.name, live=args.live)
+            except RuntimeError as error:
+                print(f"registration failed: {error}")
+                return 1
             print(f"registration: {result.note}")
+            return 0
+
+        if args.command == "dispatch":
+            task = " ".join(args.task)
+            try:
+                result = dispatch_to_virtuals(store, task)
+            except RuntimeError as error:
+                print(f"dispatch failed: {error}")
+                return 1
+            print(f"dispatch: {result}")
             return 0
 
         if args.command == "agree":
