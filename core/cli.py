@@ -18,6 +18,7 @@ from .memory.doctor import run_doctor
 from .memory.keepsake import export_keepsake, import_keepsake
 from .memory.handoff import handoff
 from .memory.lessons import SEVERITIES, learn, lessons
+from .memory.links import link
 from .memory.tasks import Task, TaskError, unfinished
 from .payments import BaseExecutor, DryRunExecutor, pay
 from .memory.reflection import accept as accept_proposal
@@ -102,6 +103,12 @@ def build_parser() -> argparse.ArgumentParser:
     learn_cmd.add_argument("--severity", default="medium", choices=SEVERITIES)
 
     lessons_cmd = sub.add_parser("lessons", help="list every remembered lesson")
+
+    link_cmd = sub.add_parser("link", help="link two durable entities both ways")
+    link_cmd.add_argument("category_a")
+    link_cmd.add_argument("name_a")
+    link_cmd.add_argument("category_b")
+    link_cmd.add_argument("name_b")
 
     doctor = sub.add_parser("doctor", help="prove memory is load-bearing")
 
@@ -288,6 +295,21 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"  ({body.get('severity', 'medium')}) {body.get('value', '')}")
             if not records:
                 print("(no lessons)")
+            return 0
+
+        if args.command == "link":
+            try:
+                result = link(
+                    store,
+                    args.category_a,
+                    args.name_a,
+                    args.category_b,
+                    args.name_b,
+                )
+            except ValueError as error:
+                print(f"refused: {error}")
+                return 1
+            print(f"linked {result['linked'][0]} <-> {result['linked'][1]}")
             return 0
 
         if args.command == "doctor":
