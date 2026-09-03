@@ -52,3 +52,34 @@ mnemos advance contractor --to delivered
 mnemos pay contractor 160 --live --network mainnet   # real tx
 mnemos replay contractor
 ```
+
+# The Virtuals partner stack
+
+The agent runs real inference on Virtuals compute, dispatched from
+memory. The console agent id is stored as a durable identity entity and
+read back by `mnemos dispatch` before anything is sent.
+
+- Agent: 01a06610-3c31-7e84-928f-27c9f87f5c5a (created in the Virtuals
+  console, Agent Compute)
+- Endpoint: https://compute.virtuals.io/v1 (OpenAI-compatible)
+- First dispatch ran Claude Fable 5 through the compute service and
+  returned a completion (usage recorded, cost billed to the agent
+  wallet).
+
+The first response was the model honestly refusing the roleplay:
+
+> I can't confirm that truthfully. I have no durable memory between
+> conversations; this context window is my only source of truth.
+
+That is exactly the gap Mnemos exists to close: the compute is smart,
+and the memory layer is what makes it remember.
+
+## Reproduce the Virtuals stack
+
+```bash
+pip install '.[virtuals]'
+mnemos register --agent-id <console agent id>
+export VIRTUALS_API_KEY=<key from the agent's Compute settings>
+export VIRTUALS_COMPUTE_URL=https://compute.virtuals.io/v1
+mnemos dispatch "a task for the agent"
+```
