@@ -31,6 +31,22 @@ already told the agent. Mnemos recall reads Sibyl and answers without a
 single model call for the memory step. Memory stops being a per-message
 cost and becomes an asset you own.
 
+## What users name as the top three
+
+The Sibyl team's own answer, from their Discord, on what users value
+most in memory:
+
+1. It gets better with time as it learns you and your workflows.
+2. Pretty much perfect recall.
+3. It will not hallucinate, and tells you when it cannot find something
+   so you can redirect.
+
+Mnemos builds all three deliberately. Reflection turns journal patterns
+into accepted proposals (it learns). Recall is FTS plus a deterministic
+fallback (it finds). And the empty-store answer is the product, not an
+error: "I don't remember anything about that. Tell me, and I will keep
+it."
+
 ## The proof
 
 - Deletion test: `mnemos doctor` proves recall and gates collapse when

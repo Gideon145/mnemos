@@ -21,13 +21,14 @@ Mnemos is the RAM upgrade for agents. The full case is in
 ## What it does
 
 - **Remembers you, honestly.** Recall answers only from what memory actually
-  holds, and says so when it holds nothing.
+  holds, and says so when it holds nothing. No invented memories, ever.
 - **Agreements with teeth.** A state machine (`draft -> agreed -> delegated ->
   delivered -> paid`) that moves one step at a time, never backward.
 - **Memory-gated payments.** Nothing pays out unless a remembered, delivered
   agreement covers the amount. The gate reads memory before it allows anything.
 - **Keepsakes.** One command exports everything into a portable `.mne` pack.
-  A fresh agent on a fresh machine imports it and remembers you.
+  A fresh agent on a fresh machine imports it and remembers you. Packs are
+  plain JSON with a sha256 digest: commit them to git like any backup.
 - **Lessons.** Failures are stored with severity, so the same mistake stays
   wrong only once.
 - **Tasks that survive restarts.** `resume` lists unfinished work, work first.
