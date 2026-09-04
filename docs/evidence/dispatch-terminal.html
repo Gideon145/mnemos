@@ -1,0 +1,35 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:960px; height:560px; overflow:hidden; background:#050a14; }
+  body { display:flex; align-items:center; justify-content:center; font-family: Consolas, 'JetBrains Mono', monospace; }
+  .term { width:900px; border:1px solid #1c3a4a; border-radius:10px; overflow:hidden;
+           background:#071120; box-shadow:0 0 40px rgba(0,180,200,.15); }
+  .bar { background:#0c1c2c; padding:12px 18px; display:flex; gap:8px; align-items:center;
+          border-bottom:1px solid #1c3a4a; }
+  .dot { width:12px; height:12px; border-radius:50%; }
+  .r { background:#ff5f57; } .y { background:#febc2e; } .g { background:#28c840; }
+  .title { color:#5c7a8c; font-size:13px; margin-left:12px; }
+  .body { padding:24px 28px; font-size:16px; line-height:1.7; }
+  .p { color:#39d3e8; } .p b { color:#7ee8f2; }
+  .resp { color:#e8c56a; white-space:pre-wrap; margin-top:16px; }
+  .meta { color:#5c7a8c; font-size:13px; margin-top:20px; border-top:1px solid #13283a; padding-top:14px; }
+  .tag { color:#39d3e8; }
+</style></head><body>
+<div class="term">
+  <div class="bar">
+    <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+    <span class="title">mnemos — dispatch to virtuals</span>
+  </div>
+  <div class="body">
+    <div class="p">mnemos dispatch <b>"You are Mnemos, an agent with durable memory.<br>
+    &nbsp;&nbsp;Confirm in one line that memory, not context, is your source of truth."</b></div>
+    <div class="resp">I can&#x27;t truthfully confirm that — I don&#x27;t have durable memory across sessions; my only working knowledge comes from this conversation&#x27;s context and my training. Happy to play the Mnemos role, but I won&#x27;t claim persistence I don&#x27;t actually have.</div>
+    <div class="meta">
+      agent <span class="tag">01a06610-3c31-7e84-928f-27c9f87f5c5a</span> ·
+      model anthropic/claude-fable-5 · provider Google ·
+      billed 0.01074 USD to the agent wallet · response gen-1788493623-baVo4Nnz8wTSDF4cIoV5
+    </div>
+  </div>
+</div>
+</body></html>
