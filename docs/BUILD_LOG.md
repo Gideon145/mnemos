@@ -49,3 +49,18 @@ Memory became the authority over real money.
 55 tests passing.
 
 Public post: https://x.com/mnemos_agent/status/2095390120341811415
+
+## Day 4 (Sep 4, 2026)
+
+The agent learns from pain, and runs on Virtuals compute.
+
+- scar gate: a high severity lesson linked to an agreement vetoes its payments until resolved
+- Virtuals ACP integration: console agent id recorded in memory, tasks dispatched to the OpenAI-compatible compute endpoint, with the legacy GAME SDK path kept as fallback
+- first live dispatch captured as evidence: Claude Fable 5 refused the roleplay and stated it has no durable memory, billed 0.01074 USD to the agent wallet
+- docs answer the official question: what memory improves (money, decisions, failures, time)
+- demo script rewritten around the real CLI, every beat ends with what memory improved
+- capture and render scripts turn a dispatch into a branded transcript
+
+65 tests passing.
+
+Public post: https://x.com/mnemos_agent/status/2095726174433325315
