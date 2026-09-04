@@ -51,6 +51,17 @@ the deletion test proving the build is load-bearing.
 7. `mnemos doctor` deletes the memory and shows recall emptying and the
    gate closing.
 
+## How memory improves the build
+
+- Money: recall and keepsake cold starts cost zero model calls; the same
+  fact costs nothing to re-read forever.
+- Decisions: the gate refused a payment while the agreement was agreed,
+  then executed the same request once delivered. The decision changed
+  because memory state changed.
+- Failures: a high severity lesson vetoes linked payments until
+  resolved, so repeat mistakes are blocked by construction.
+- Time: tasks are durable and resume lists unfinished work.
+
 ## The two partner stacks
 
 - Base: a live mainnet transaction authorized by remembered agreement

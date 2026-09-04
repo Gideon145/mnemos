@@ -18,6 +18,21 @@ smarter while memory still gets lost or costs tokens.
 Mnemos is the RAM upgrade for agents. The full case is in
 [docs/PMF.md](docs/PMF.md).
 
+## What memory improves
+
+Memory is not the feature. What memory changes is the feature.
+
+- **Money.** Recall answers without a single model call. The same fact
+  costs zero tokens forever, and a keepsake restores a full agent with no
+  re-teaching.
+- **Decisions.** The payment gate refused a real request while the
+  agreement was only agreed, then executed it once delivered. Same
+  request, opposite outcomes, caused by memory state alone.
+- **Failures.** A high severity lesson linked to an agreement vetoes its
+  payments until the lesson is resolved. Mistakes stop repeating.
+- **Time.** Tasks survive restarts and `resume` lists what is left, so
+  work never dies with the session.
+
 ## What it does
 
 - **Remembers you, honestly.** Recall answers only from what memory actually

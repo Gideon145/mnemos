@@ -1,94 +1,91 @@
 # Mnemos — Demo Script (2–5 min, one unedited take)
 
 Scoring target: **recall is table stakes → we show it, then go past it.**
-The two beats that top the band: **coordination** (multi-agent handoff through
-memory) and **dynamic storage** (an agreement state machine that drives an
-on-chain payment gate). The deletion test closes it.
+The beats that top the band: **dynamic storage** (an agreement state machine
+that drives an on-chain payment gate), **coordination** (handoff to a Virtuals
+agent through memory), and the **deletion test**. Every beat ends with what
+memory improved, because that is the crux of the scoring.
 
 ---
 
 ## Beat 0 — Cold open (~20s)
 
-> "Every assistant forgets. Close the tab, lose the context, teach it all again
-> tomorrow. Forgetting is a bug. This is Mnemos — an agent whose memory is the
-> product. And the memory is yours."
+> "Every assistant forgets. Close the tab, lose the context, teach it all
+> again tomorrow. Forgetting is a bug. This is Mnemos — an agent whose memory
+> is the product. And the memory is yours."
 
-## Beat 1 — Teach (~30s)
-
-Terminal:
+## Beat 1 — Teach (~25s)
 
 ```
 mnemos remember "I like short, direct answers"
-mnemos remember "contractor rate is $40/hr"
-mnemos remember "I ship on Fridays"
+mnemos remember "contractor rate is 40 per hour"
 ```
 
-> "Three durable facts, written to Sibyl Memory as entities. That's the floor —
-> recall. Watch what we build on top of it."
+> "Two durable facts, written to Sibyl Memory as entities. Recall is the
+> floor. What memory improves comes next: these answers cost zero tokens
+> forever, because Mnemos never re-explains itself to a model."
 
-## Beat 2 — Dynamic storage: the agreement state machine (~45s)
-
-> "Memory here isn't a notepad. It's live state."
-
-```
-mnemos agree "designer alex" "banner job" "60 usdc fixed" "use my remembered style guide"
-```
-
-> "Mnemos creates an agreement entity — state `draft` — and links it to the
-> remembered style guide. I confirm, state flips to `agreed`. The agreement
-> lives in memory, and its state changes as the world changes. Delete the store
-> and the agreement itself is gone."
-
-## Beat 3 — Coordination: handoff through memory (~45s)
-
-> "Now the coordination beat. Mnemos delegates the job to a specialist agent on
-> Virtuals."
+## Beat 2 — Dynamic storage: the agreement (~40s)
 
 ```
-mnemos delegate banner-job to @designer-agent
+mnemos agree banner-job --with alex --amount 160
+mnemos pay banner-job 160
 ```
 
-> "The handoff is written to memory: task state `delegated`, agent id, timestamp.
-> The specialist works, returns — Mnemos writes the outcome to the journal and
-> updates the agreement to `delivered`. Two agents, one shared memory surface.
-> That's coordination, not chat."
+> "An agreement entity, state agreed. The payment gate reads it: state is not
+> delivered, so the payment is refused. Nothing was broadcast. Memory just
+> stopped a premature payment. That is an improved decision, caused by memory."
 
-## Beat 4 — Keepsake + cold start (~40s)
+## Beat 3 — Coordination: handoff through memory (~40s)
+
+```
+mnemos advance banner-job --to delegated
+mnemos delegate banner-job --to <virtuals-agent-id> --task "design the banner"
+mnemos dispatch "design the banner in the remembered style"
+```
+
+> "The handoff is written to memory: agent id, task, timestamp. Then the
+> remembered agent id is read back and the task is dispatched to the Virtuals
+> compute service. Two runtimes, one memory surface. Coordination, not chat."
+
+## Beat 4 — Keepsake + cold start (~35s)
 
 ```
 mnemos keepsake export mnemos.mne
-# close everything, fresh session / fresh machine
+# close everything, fresh session, fresh machine
 mnemos keepsake import mnemos.mne
-mnemos ask "how do I like answers? what's my contractor rate?"
+mnemos ask "how do I like answers? what is my contractor rate?"
 ```
 
-> "Fresh session. The agent recalls from Sibyl. The floor, done cold."
+> "Fresh machine. The agent recalls from memory. Cold start, zero tokens, no
+> re-teaching. Memory improved the setup cost from forever to one command."
 
-## Beat 5 — The gate reads memory, then acts (~30s)
+## Beat 5 — The gate executes, with a real receipt (~30s)
 
 ```
-mnemos pay "banner job"
+mnemos advance banner-job --to delivered
+mnemos pay banner-job 160 --live --network mainnet
 ```
 
-> "Mnemos reads the agreement from memory — amount, recipient, state. State is
-> `delivered`, so it executes the x402 payment on Base: sixty USDC. The on-chain
-> action happened *because memory said so*. The agent proposes; the remembered
-> agreement gates it."
+> "Same request as before, but now the agreement is delivered. The gate reads
+> memory, checks the amount, and Mnemos signs a real transaction on Base
+> mainnet. The on-chain action happened because memory said so. The receipt is
+> in the repo."
 
 ## Beat 6 — The deletion test (~20s)
 
-> "Now the test your rules actually ask for."
+```
+mnemos doctor
+```
 
-Remove the Sibyl store. Repeat the questions. Nothing. Try the payment:
-
-> "No agreement found. Gate closed. Memory wasn't a feature — it was the
-> product. Load-bearing, proven on camera."
+> "Delete the store and every gate closes. Recall empties, payments refuse.
+> Memory was not a feature — it was the product. Load-bearing, proven."
 
 ## Close (~15s)
 
-> "Recall is table stakes. We built coordination between agents and a payment
-> gate that cannot run without memory. The oracle has a memory now — and the
-> memories belong to you."
+> "Recall is table stakes. Mnemos adds coordination between agents, a payment
+> gate that cannot run without memory, and lessons that veto repeat failures.
+> The agent can be wrong. The gate can't."
 
 ---
 
