@@ -9,7 +9,7 @@ take it anywhere.
 
 ![Mnemos banner](docs/images/banner.jpg)
 
-[![Smithery](https://img.shields.io/badge/Smithery-Gideon145%2Fmnemos-FF6B00?style=for-the-badge)](https://smithery.ai/server/Gideon145/mnemos)
+[![Smithery](https://img.shields.io/badge/Smithery-mnemos%2Fmnemos-FF6B00?style=for-the-badge)](https://smithery.ai/servers/mnemos/mnemos)
 
 ## Why
 
@@ -85,8 +85,9 @@ Claude Desktop / VS Code / Cursor:
 ```
 
 Remote / hosted: `mnemos mcp --http` serves streamable HTTP on port 8000
-(`/mcp`), which is what the Dockerfile and `smithery.yaml` deploy. One-click
-install on [Smithery](https://smithery.ai/server/Gideon145/mnemos).
+(`/mcp`), which is what the Dockerfile and `smithery.yaml` deploy. Live
+endpoints: [Railway](https://mnemos-production-2572.up.railway.app/mcp) and
+[Smithery](https://smithery.ai/servers/mnemos/mnemos).
 
 ## Install
 
