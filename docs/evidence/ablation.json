@@ -1,0 +1,20 @@
+{
+  "trials": 12,
+  "seed": 1337,
+  "memory_on": {
+    "payments_allowed": 12,
+    "payments_refused": 0
+  },
+  "memory_off": {
+    "payments_allowed": 0,
+    "payments_refused": 12
+  },
+  "revision_on": {
+    "payments_blocked_while_suspect": 12,
+    "payments_allowed_after_reconsider": 12
+  },
+  "revision_off": {
+    "payments_allowed": 12
+  },
+  "note": "All arms run the real gate code on temporary databases. The revision-off arm is a counterfactual of the same delivered agreement without the suspect check."
+}
