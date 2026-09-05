@@ -336,8 +336,9 @@ def _chat_answer(user_text: str) -> str:
         "Rules: ground answers in the memory above when the user asks about "
         "it. If the user tells you a fact about themselves, acknowledge it "
         "and suggest they store it with the remember tool. Never present "
-        "invented content as memory. Keep answers to 1 to 3 sentences, warm "
-        "but not sycophantic."
+        "invented content as memory. Never use em dashes or en dashes, "
+        "use commas or periods instead. Keep answers to 1 to 3 sentences, "
+        "warm but not sycophantic."
     )
     payload: dict[str, Any] = {
         "messages": [
@@ -355,7 +356,9 @@ def _chat_answer(user_text: str) -> str:
     choices = result.get("choices") or []
     if not choices:
         raise RuntimeError(f"agent returned no choices: {str(result)[:160]}")
-    return str((choices[0].get("message") or {}).get("content", "")).strip()
+    answer = str((choices[0].get("message") or {}).get("content", "")).strip()
+    # House style: no em or en dashes anywhere.
+    return answer.replace("\u2014", ", ").replace("\u2013", "-")
 
 
 def run_server(http: bool = False) -> None:
