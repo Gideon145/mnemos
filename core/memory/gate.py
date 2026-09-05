@@ -73,6 +73,17 @@ def evaluate_payment(store: MemoryStore, agreement_name: str, amount: float) -> 
                 f"{', '.join(scars)}; resolve the lesson first"
             ),
         )
+    from .revision import suspect_reasons
+
+    suspect = suspect_reasons(store, "agreement", agreement_name)
+    if suspect:
+        return GateResult(
+            allowed=False,
+            reason=(
+                f"agreement {agreement_name!r} is suspect: depends on revised "
+                f"memory {', '.join(suspect)}; reconsider first"
+            ),
+        )
     return GateResult(
         allowed=True,
         reason=f"agreement {agreement_name!r} is delivered and covers {amount}",
