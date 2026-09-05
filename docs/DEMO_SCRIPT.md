@@ -85,6 +85,10 @@ mnemos pay banner-job 160
 > corrects the fact. Mnemos walks the dependency graph: that agreement is
 > suspect. The gate refuses: 'agreement is suspect, depends on revised memory'.
 > A wrong memory just stopped a payout."
+>
+> **The one-liner for this beat:** "When an agent learns that a memory it
+> acted on was wrong, the system determines what that mistake contaminated
+> and prevents the agent from continuing as if nothing happened."
 
 ```
 mnemos reconsider agreement banner-job --valid --reason "fixed price"
