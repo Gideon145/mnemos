@@ -30,6 +30,12 @@ take it anywhere.
   </a>
 </p>
 
+Built for the Sibyl Memory Hackathon, Sep 1 to 10, 2026. One design
+principle throughout: recall answers only from what memory actually
+holds, and nothing acts until memory says so. A forgotten fact is
+answered honestly, a refused payment is journaled as loudly as a paid
+one, and the journal is sealed with a hash chain anyone can verify.
+
 ## Verified live
 
 Both partner stacks ran on the final code, on real rails. Full captures and
@@ -47,11 +53,18 @@ reproduction steps: [docs/VERIFICATION.md](docs/VERIFICATION.md).
 - [What memory improves](#what-memory-improves)
 - [What it does](#what-it-does)
 - [Use Mnemos from any agent (MCP)](#use-mnemos-from-any-agent-mcp)
+- [Endpoints](#endpoints)
 - [Install](#install)
 - [The load-bearing map](#the-load-bearing-map)
+- [Testing](#testing)
 - [The proof in one take](#the-proof-in-one-take)
+- [The gate and payment lifecycle](#the-gate-and-payment-lifecycle)
+- [Measured](#measured)
 - [Architecture](#architecture)
+- [Project layout](#project-layout)
+- [Invariants](#invariants)
 - [Honest status](#honest-status)
+- [Building in public](#building-in-public)
 - [License](#license)
 
 ### Supplemental docs
@@ -146,6 +159,22 @@ Remote / hosted: `mnemos mcp --http` serves streamable HTTP on port 8000
 endpoints: [Railway](https://mnemos-production-2572.up.railway.app/mcp) and
 [Smithery](https://smithery.ai/servers/mnemos/mnemos).
 
+## Endpoints
+
+The hosted app at https://mnemos-production-2572.up.railway.app serves
+everything:
+
+| Path | What |
+|---|---|
+| `/` | The live playground site |
+| `/chat` | Agentic chat. Facts are extracted and stored before the model answers |
+| `/mcp` | Streamable HTTP MCP: 12 tools with typed outputs |
+| `/assets` `/css` `/js` | Static site assets |
+
+CORS is open on the hosted app, the MCP client reconnects automatically
+on session expiry, and `mnemos mcp` runs the same surface over stdio
+locally.
+
 ## Install
 
 ```bash
@@ -175,6 +204,37 @@ site in under two minutes.
 | MCP surface | `mnemos mcp` | `core/mcp.py` |
 | Deletion test | `mnemos doctor` | `core/memory/doctor.py` |
 
+## Testing
+
+```bash
+python -m pytest tests -q      # 111 passing
+```
+
+| Suite | Tests | Focus |
+|---|---|---|
+| `test_revision` | 19 | blast radius, suspect gates, reconsider |
+| `test_mcp` | 14 | the 12 tools over stdio, fact extraction, reset |
+| `test_memory` | 10 | tiers, agreements, keepsakes, gates, deletion test |
+| `test_virtuals` | 9 | registration and dispatch, memory write-back |
+| `test_recall` | 7 | recall honesty, including the empty-memory case |
+| `test_payments` | 6 | pending claims, duplicate refusal, paid only on receipt |
+| `test_reflection` | 5 | journal patterns become proposals, not preferences |
+| `test_tasks` | 5 | work that survives a restart |
+| `test_keepsake` | 4 | a fresh machine gets the agent back |
+| `test_lessons` | 4 | failures remembered so they are not repeated |
+| `test_links` | 4 | breadcrumbs between durable entities |
+| `test_replay` | 4 | the causal chain as the journal recorded it |
+| `test_recap` | 4 | the journal reported back as an audit |
+| `test_scar_gate` | 4 | memory of failure vetoes future actions |
+| `test_seal` | 4 | journal seal, deletions break the chain |
+| `test_delegation` | 3 | handing work to another agent, remembered |
+| `test_doctor` | 2 | the deletion test, on demand |
+| `test_handoff` | 2 | give another agent your memory, on purpose |
+| `test_ablation` | 1 | pins the measured numbers below |
+
+The suites are written from the attacker's side: duplicate payments,
+tampered journals, suspected agreements, deleted memory.
+
 ## The proof in one take
 
 ```bash
@@ -200,6 +260,43 @@ mnemos doctor
 A live Base mainnet payment from a memory-gated decision is recorded in
 [docs/VERIFICATION.md](docs/VERIFICATION.md), with the explorer link.
 
+## The gate and payment lifecycle
+
+Nothing pays out unless a remembered, delivered agreement covers the
+amount.
+
+- **One state at a time.** Agreements move `draft -> agreed -> delegated
+  -> delivered -> paid`, one transition per command, never backward.
+  Every transition is journaled.
+- **The gate reads memory first.** `pay` asks the deterministic gate
+  whether a delivered agreement covers the amount before any executor
+  is handed an intent.
+- **Claim before broadcast.** The intent is claimed in working state
+  with compare-and-set before any signature exists. A pending or paid
+  claim refuses duplicates, so the same intent can never be broadcast
+  twice. A submit exception marks the claim failed for a clean retry;
+  only a receipt marks it paid.
+- **Dry-run by default.** `pay` journals the intent and sends nothing
+  unless `--live` and `MNEMOS_PAYER_KEY` are set. Refusals are journaled
+  like fills, so every stand-down is replayable with `mnemos replay`.
+
+## Measured
+
+Seeded ablation, 12 trials per arm, all arms running the real gate code
+on temporary databases (`scripts/ablation.py`, pinned by
+`tests/test_ablation.py`, raw results in `docs/evidence/ablation.json`).
+
+| Arm | Payments allowed | Payments refused |
+|---|---|---|
+| Memory on | 12 | 0 |
+| Memory off (memory deleted) | 0 | 12 |
+| Revision on, while suspect | 0 | 12 |
+| Revision on, after reconsider | 12 | 0 |
+| Revision off (counterfactual, no suspect check) | 12 | 0 |
+
+The revision-off arm is a counterfactual of the same delivered agreement
+without the suspect check, so the difference is the revision gate alone.
+
 ## Architecture
 
 ```
@@ -224,6 +321,55 @@ you / any MCP client
         +----------> dispatch ---------------> Virtuals ACP (live, billed)
 ```
 
+## Project layout
+
+```
+core/
+  mcp.py                12 tools, agentic chat, static site server
+  cli.py                the command line surface
+  agent/
+    recall.py           FTS + lexical recall, honest empty answer
+    recap.py            deterministic day summary from the journal
+    replay.py           causal replay of every write and refusal
+  memory/
+    store.py            durable entities on Sibyl Memory
+    agreement.py        agreements, one state at a time
+    gate.py             deterministic gates, memory read first
+    lessons.py          failures with severity
+    tasks.py            tasks that survive restarts
+    keepsake.py         portable .mne packs with sha256 digest
+    revision.py         revise, blast radius, suspect, reconsider
+    seal.py             journal seal hash chain
+    doctor.py           the deletion test, on demand
+    handoff.py          give another agent your memory
+    links.py            relational breadcrumbs between entities
+    reflection.py       journal patterns become proposed preferences
+  payments/
+    executor.py         dry-run and Base executors, claim-before-broadcast
+  integrations/
+    virtuals.py         Virtuals registration and dispatch, memory write-back
+scripts/                 ablation, evidence capture, deploy checks
+site/                    the static playground site
+tests/                   111 tests
+docs/                    all the supplemental docs
+```
+
+## Invariants
+
+Properties that must hold or the premise collapses. All are covered by
+tests.
+
+- Recall never invents. An empty store yields an honest empty answer.
+- No payment without a remembered, delivered agreement covering the
+  amount.
+- One transition per command. State never moves backward.
+- An intent is claimed in memory before any signature exists, so it
+  cannot broadcast twice.
+- A revised fact makes everything that depended on it suspect, and the
+  gate stays closed until each item is reconsidered.
+- Appending, editing, or deleting journal events breaks the seal.
+- A keepsake pack restores a fresh agent on a fresh machine.
+
 ## Honest status
 
 | Area | Status | Proof |
@@ -239,6 +385,14 @@ you / any MCP client
 | Demo video | pending | script in `docs/DEMO_SCRIPT.md` |
 | Semantic/vector search | deliberately not shipped | recall is FTS + deterministic fallback |
 | Production auth on the hosted endpoint | deliberately not claimed | demo surface |
+
+## Building in public
+
+One post per build day on X at
+[@mnemos_agent](https://x.com/mnemos_agent), each pointing at what
+shipped that day. The ground rule is the same as the README: a post
+claims only what is live and verified, and links the live playground
+and the hosted MCP.
 
 ## License
 
