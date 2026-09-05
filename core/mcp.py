@@ -310,15 +310,80 @@ def suspect() -> SuspectResult:
         store.close()
 
 
+def _chat_answer(user_text: str) -> str:
+    """Answer conversationally, grounded in whatever memory currently holds."""
+    api_key = os.environ.get("VIRTUALS_API_KEY")
+    endpoint = os.environ.get("VIRTUALS_COMPUTE_URL")
+    if not api_key or not endpoint:
+        raise RuntimeError(
+            "the hosted chat needs VIRTUALS_API_KEY and VIRTUALS_COMPUTE_URL"
+        )
+    store = _store()
+    try:
+        memory = RecallEngine(store).ask("what do you know about me?").answer
+    finally:
+        store.close()
+
+    system = (
+        "You are Mnemos, an agent whose durable memory is the product. "
+        "Answer in 1 to 3 sentences, conversational, a little warm, never sycophantic. "
+        "Below is everything your durable memory currently holds.\n\n"
+        f"MEMORY:\n{memory}\n\n"
+        "Rules: ground answers in the memory above when the user asks about "
+        "it. When a user tells you a fact about themselves, acknowledge it "
+        "and suggest they store it with the remember tool. Never invent "
+        "memory contents. If asked what you are, say you are Mnemos, an "
+        "agent with durable memory on Sibyl."
+    )
+    payload: dict[str, Any] = {
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user_text},
+        ]
+    }
+    model = os.environ.get("VIRTUALS_MODEL")
+    if model:
+        payload["model"] = model
+
+    from .integrations.virtuals import _acp_transport
+
+    result = _acp_transport(endpoint, api_key, payload)
+    choices = result.get("choices") or []
+    if not choices:
+        raise RuntimeError(f"agent returned no choices: {str(result)[:160]}")
+    return str((choices[0].get("message") or {}).get("content", "")).strip()
+
+
 def run_server(http: bool = False) -> None:
     """Serve the tools over stdio (local clients) or streamable HTTP (Smithery)."""
     if not http:
         server.run()
         return
     import uvicorn
+    from starlette.applications import Starlette
+    from starlette.concurrency import run_in_threadpool
     from starlette.middleware.cors import CORSMiddleware
+    from starlette.responses import JSONResponse
+    from starlette.routing import Mount, Route
 
-    app = server.streamable_http_app()
+    async def chat_endpoint(request: Any) -> JSONResponse:
+        try:
+            body = await request.json()
+            text = str((body or {}).get("message", "")).strip()
+            if not text:
+                return JSONResponse({"error": "message required"}, status_code=400)
+            answer = await run_in_threadpool(_chat_answer, text)
+            return JSONResponse({"answer": answer})
+        except Exception as exc:  # pragma: no cover
+            return JSONResponse({"error": str(exc)}, status_code=502)
+
+    base = server.streamable_http_app()
+    app: Any = Starlette(
+        routes=[
+            Route("/chat", chat_endpoint, methods=["POST"]),
+            Mount("/", app=base),
+        ]
+    )
     # Browser clients (the live playground) need CORS plus access to the
     # session header the streamable-http handshake returns.
     app = CORSMiddleware(
