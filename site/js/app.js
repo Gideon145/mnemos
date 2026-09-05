@@ -16,7 +16,7 @@ function setStatus(online) {
   status.lastChild.textContent = online ? " live" : " offline";
 }
 
-async function postMCP(payload, session) {
+async function postMCP(payload, session, isRetry = false) {
   const headers = {
     "Content-Type": "application/json",
     Accept: "application/json, text/event-stream",
@@ -28,6 +28,12 @@ async function postMCP(payload, session) {
     body: JSON.stringify(payload),
   });
   const raw = await res.text();
+  // Hosted sessions expire: reconnect once and replay the call.
+  if (res.status === 404 && !isRetry) {
+    sessionId = null;
+    await initialize();
+    return postMCP(payload, sessionId, true);
+  }
   if (res.headers.get("Mcp-Session-Id")) {
     sessionId = res.headers.get("Mcp-Session-Id");
   }
@@ -40,22 +46,31 @@ async function postMCP(payload, session) {
   return JSON.parse(raw);
 }
 
-async function connect() {
-  const result = await postMCP({
-    jsonrpc: "2.0",
-    id: nextId++,
-    method: "initialize",
-    params: {
-      protocolVersion: "2025-06-18",
-      capabilities: {},
-      clientInfo: { name: "mnemos-playground", version: "1.0" },
+async function initialize() {
+  const result = await postMCP(
+    {
+      jsonrpc: "2.0",
+      id: nextId++,
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-06-18",
+        capabilities: {},
+        clientInfo: { name: "mnemos-playground", version: "1.0" },
+      },
     },
-  });
+    null,
+    true
+  );
   if (!sessionId) throw new Error("no session returned");
   return result;
 }
 
+function connect() {
+  return initialize();
+}
+
 async function callTool(name, args) {
+  if (!sessionId) await initialize();
   const payload = await postMCP(
     { jsonrpc: "2.0", id: nextId++, method: "tools/call", params: { name, arguments: args } },
     sessionId
