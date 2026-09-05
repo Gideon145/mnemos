@@ -364,6 +364,7 @@ def run_server(http: bool = False) -> None:
         server.run()
         return
     import uvicorn
+    from contextlib import asynccontextmanager
     from starlette.applications import Starlette
     from starlette.concurrency import run_in_threadpool
     from starlette.middleware.cors import CORSMiddleware
@@ -382,11 +383,20 @@ def run_server(http: bool = False) -> None:
             return JSONResponse({"error": str(exc)}, status_code=502)
 
     base = server.streamable_http_app()
+
+    @asynccontextmanager
+    async def combined_lifespan(_app: Any):
+        # The mounted MCP app owns the session manager, which only starts
+        # inside its own lifespan. Compose it into the root lifespan.
+        async with base.router.lifespan_context(base):
+            yield
+
     app: Any = Starlette(
         routes=[
             Route("/chat", chat_endpoint, methods=["POST"]),
             Mount("/", app=base),
-        ]
+        ],
+        lifespan=combined_lifespan,
     )
     # Browser clients (the live playground) need CORS plus access to the
     # session header the streamable-http handshake returns.
