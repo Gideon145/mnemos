@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mnemos | The agent that cannot forget</title>
+  <meta name="description" content="Mnemos is an agent whose memory is the product. Durable memory on Sibyl, payments gated by memory on Base, live on Virtuals." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="bg-glow glow-teal"></div>
+  <div class="bg-glow glow-orange"></div>
+
+  <header class="nav">
+    <a class="brand" href="#top">
+      <span class="brand-mark">M</span>
+      <span>MNEMOS</span>
+    </a>
+    <nav>
+      <a href="#gate">The gate</a>
+      <a href="#improves">What memory improves</a>
+      <a href="#playground">Playground</a>
+    </nav>
+    <a class="btn small" href="https://github.com/Gideon145/mnemos">GitHub</a>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="badge">Sibyl Memory Hackathon · Base mainnet · Virtuals compute</div>
+      <h1>The agent that<br /><span class="accent">cannot forget.</span></h1>
+      <p class="lede">
+        Most agents lose everything the moment the tab closes. Mnemos keeps
+        memory durable, gates money on it, and refuses to act on a memory that
+        turned out wrong.
+      </p>
+      <div class="cta-row">
+        <a class="btn primary" href="#playground">Try it live</a>
+        <a class="btn ghost" href="https://github.com/Gideon145/mnemos">Read the repo</a>
+      </div>
+      <div class="hero-terminal">
+        <div class="term-bar"><span></span><span></span><span></span><em>mnemos</em></div>
+        <pre><code><span class="t-prompt">$</span> mnemos revise preference contractor_rate 60 --reason "renotiated"
+<span class="t-dim">revised preference:contractor_rate: 40 -> 60</span>
+<span class="t-orange">  suspect: agreement:fencing</span>
+<span class="t-prompt">$</span> mnemos pay fencing 160
+<span class="t-red">gate: agreement 'fencing' is suspect: depends on revised memory</span>
+<span class="t-red">      contractor_rate; reconsider first</span>
+<span class="t-dim">payment refused</span></code></pre>
+      </div>
+    </section>
+
+    <section class="stats" id="stats">
+      <div class="stat"><strong>100</strong><span>tests, all green</span></div>
+      <div class="stat"><strong>2</strong><span>partner stacks, live</span></div>
+      <div class="stat"><strong>1</strong><span>revision gate</span></div>
+      <div class="stat"><strong>11</strong><span>MCP tools, hosted</span></div>
+    </section>
+
+    <section class="gate" id="gate">
+      <h2>A wrong memory<br />stops the money.</h2>
+      <p class="lede">
+        Every agent has the same correction story. You say the rate is wrong,
+        the agent says noted, and the payment still goes out. Mnemos computes
+        the blast radius of every correction, marks dependents suspect, and the
+        gate refuses until each one is explicitly reconsidered.
+      </p>
+      <div class="gate-flow">
+        <div class="flow-step"><span class="flow-num">1</span><strong>Correct</strong><p>revise the fact, history stays</p></div>
+        <div class="flow-line"></div>
+        <div class="flow-step"><span class="flow-num">2</span><strong>Contaminate</strong><p>dependents become suspect</p></div>
+        <div class="flow-line"></div>
+        <div class="flow-step"><span class="flow-num">3</span><strong>Close</strong><p>the payment gate refuses</p></div>
+        <div class="flow-line"></div>
+        <div class="flow-step"><span class="flow-num">4</span><strong>Reconsider</strong><p>review reopens the gate</p></div>
+      </div>
+    </section>
+
+    <section class="improves" id="improves">
+      <h2>What memory improves</h2>
+      <div class="cards">
+        <article class="card">
+          <div class="card-num">01</div>
+          <h3>Money</h3>
+          <p>Recall costs zero tokens. The same fact re-reads forever, and keepsakes restore a full agent with one command.</p>
+        </article>
+        <article class="card">
+          <div class="card-num">02</div>
+          <h3>Decisions</h3>
+          <p>The gate refused a real payment while the agreement was only agreed, then executed it once delivered. Memory alone changed the outcome.</p>
+        </article>
+        <article class="card">
+          <div class="card-num">03</div>
+          <h3>Failures</h3>
+          <p>A high severity lesson vetoes linked payments until resolved. Mistakes stop repeating.</p>
+        </article>
+        <article class="card">
+          <div class="card-num">04</div>
+          <h3>Corrections</h3>
+          <p>When a memory turns out wrong, everything built on it becomes suspect until reviewed. Nothing deleted, all journaled.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="playground" id="playground">
+      <div class="pg-head">
+        <h2>Talk to the live agent</h2>
+        <p class="lede">This box calls the hosted MCP endpoint over streamable HTTP. Real memory, real tools.</p>
+        <div class="pg-status" id="pg-status"><span class="dot"></span>connecting</div>
+      </div>
+      <div class="pg-shell">
+        <div class="pg-chat" id="pg-chat">
+          <div class="msg bot">
+            <div class="msg-name">MNEMOS</div>
+            <div class="msg-body">Connected. I hold a shared memory on this endpoint. Teach me something, ask me what I know, or revise a fact and watch the gate logic.</div>
+          </div>
+        </div>
+        <div class="pg-chips">
+          <button class="chip" data-action="teach">Teach me two facts</button>
+          <button class="chip" data-action="ask">What do you know about me?</button>
+          <button class="chip" data-action="revise">Revise my contractor rate</button>
+          <button class="chip" data-action="blast">Run blast radius</button>
+        </div>
+        <form class="pg-input" id="pg-form">
+          <input id="pg-text" type="text" placeholder="Ask Mnemos anything in memory..." autocomplete="off" />
+          <button type="submit" class="btn primary small">Ask</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="foot-links">
+      <a href="https://github.com/Gideon145/mnemos">GitHub</a>
+      <a href="https://smithery.ai/servers/mnemos/mnemos">Smithery</a>
+      <a href="https://mnemos-production-2572.up.railway.app/mcp">MCP endpoint</a>
+      <a href="https://x.com/mnemos_agent">X</a>
+    </div>
+    <p>The agent can be wrong. The gate cannot.</p>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
