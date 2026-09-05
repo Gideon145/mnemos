@@ -28,6 +28,6 @@ Build window: **Sep 1–10, 2026**. Team: The Muses.
 
 - [x] Public repo, MIT, real commit history
 - [x] README with load-bearing memory map (judges can find call sites in <2 min)
-- [ ] 2–5 min demo with cold-start recall beat
-- [ ] Two public posts tagging @sibylcap + partners
+- [x] 2-5 min demo script with cold-start recall beat (recording on Sep 8)
+- [x] Public posts tagging @sibylcap + partners (days 1-5 published)
 - [x] Prior Work declaration (see docs/PRIOR_WORK.md)

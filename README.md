@@ -85,6 +85,7 @@ site in under two minutes.
 | Day summary | `mnemos recap` | `core/agent/recap.py` |
 | Reflection | `mnemos reflect` / `proposals` / `accept` | `core/memory/reflection.py` |
 | Revision | `mnemos revise` / `blast` / `reconsider` / `suspect` | `core/memory/revision.py` |
+| MCP surface | `mnemos mcp` | `core/mcp.py` |
 | Deletion test | `mnemos doctor` | `core/memory/doctor.py` |
 
 ## The proof in one take
@@ -114,9 +115,10 @@ A live Base mainnet payment from a memory-gated decision is recorded in
 
 ## Honest status
 
-- Base execution is verified live on mainnet (see above).
-- Virtuals registration records the agent identity in memory; the live
-  registration call is pending API credentials.
+- Base execution is verified live on mainnet, re-run Sep 5 on the final
+  code (tx in docs/VERIFICATION.md).
+- Virtuals ACP dispatch is verified live with a billed response, re-run
+  Sep 5 (response id in docs/VERIFICATION.md).
 - No semantic search. Recall uses Sibyl's FTS plus a deterministic lexical
   fallback, on purpose.
 

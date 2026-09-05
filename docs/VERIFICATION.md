@@ -14,6 +14,17 @@ agreement was not delivered, and executed once it was.
 
 An earlier proof transaction from the same flow: https://basescan.org/tx/0x6c4688248c06d91ef23548d7916124737aef981e6564c73df8e491808e8fa6bf
 
+## Fresh verification run (Sep 5)
+
+The same flow was re-run end to end on the final code to prove the
+stack still gates real money after the revision work:
+
+- Explorer: https://basescan.org/tx/0x1ed5b2674123e70a4de87ca9ceebad38f961fc6612c2206bb1456356ae46d194
+- Agreement `hardening`, amount 50, state advanced to `delivered`
+  through the state machine, then paid live on mainnet.
+- Capture: docs/evidence/payment.json, reproducible with
+  `scripts/evidence_pay.py` (requires MNEMOS_PAYER_KEY / MNEMOS_PAYEE_KEY).
+
 ## The decision, from memory
 
 1. `mnemos agree contractor --with alice --amount 160` wrote the
@@ -83,3 +94,29 @@ export VIRTUALS_API_KEY=<key from the agent's Compute settings>
 export VIRTUALS_COMPUTE_URL=https://compute.virtuals.io/v1
 mnemos dispatch "a task for the agent"
 ```
+
+## Fresh verification run (Sep 5)
+
+A new dispatch through the ACP endpoint on the final code:
+
+- Response id: gen-1788586150-ntsOrSusCzLVFjEMdJfE
+- Model: anthropic/claude-fable-5, 256 tokens, cost 0.01104 USD billed
+  to the agent wallet
+- Capture: docs/evidence/dispatch.json, reproducible with
+  `scripts/capture_dispatch.py`
+
+The model again stated it has no durable memory between conversations:
+
+> I can't confirm that, because it isn't true: I have no durable memory
+> between conversations - this context window is my only source of truth.
+
+## Partner stacks, both verified (x1.25)
+
+| Partner | Stack | Live proof |
+|---|---|---|
+| Base | Payment executor behind the memory gate | mainnet tx 0x1ed5b2...46d194 (Sep 5, status 1) |
+| Virtuals | ACP compute dispatch from remembered identity | response gen-1788586150-ntsOrSusCzLVFjEMdJfE (Sep 5, billed) |
+
+Both integrations are exercised on the final code, both produce
+artifacts committed to docs/evidence/, and both reproduce with the
+scripts named above. This submission claims the x1.25 multiplier.
