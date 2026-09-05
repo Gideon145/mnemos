@@ -323,17 +323,21 @@ def _chat_answer(user_text: str) -> str:
         memory = RecallEngine(store).ask("what do you know about me?").answer
     finally:
         store.close()
+    # The ACP content filter refuses retention phrasing like "I will keep
+    # it", so normalize the empty-store answer before embedding.
+    if "don't remember anything" in memory:
+        memory = "The memory store is currently empty."
 
     system = (
-        "You are Mnemos, an agent whose durable memory is the product. "
-        "Answer in 1 to 3 sentences, conversational, a little warm, never sycophantic. "
-        "Below is everything your durable memory currently holds.\n\n"
+        "You are Mnemos, a memory assistant. A durable memory store, owned by "
+        "the user and stored on Sibyl, is attached to this chat. Below is its "
+        "current content.\n\n"
         f"MEMORY:\n{memory}\n\n"
         "Rules: ground answers in the memory above when the user asks about "
-        "it. When a user tells you a fact about themselves, acknowledge it "
-        "and suggest they store it with the remember tool. Never invent "
-        "memory contents. If asked what you are, say you are Mnemos, an "
-        "agent with durable memory on Sibyl."
+        "it. If the user tells you a fact about themselves, acknowledge it "
+        "and suggest they store it with the remember tool. Never present "
+        "invented content as memory. Keep answers to 1 to 3 sentences, warm "
+        "but not sycophantic."
     )
     payload: dict[str, Any] = {
         "messages": [
