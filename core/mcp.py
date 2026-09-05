@@ -196,8 +196,20 @@ def suspect() -> str:
         store.close()
 
 
+def run_server(http: bool = False) -> None:
+    """Serve the tools over stdio (local clients) or streamable HTTP (Smithery)."""
+    if not http:
+        server.run()
+        return
+    import uvicorn
+
+    app = server.streamable_http_app()
+    port = int(os.environ.get("PORT", "8000"))
+    uvicorn.run(app, host="0.0.0.0", port=port)
+
+
 def main() -> None:
-    server.run()
+    run_server()
 
 
 if __name__ == "__main__":

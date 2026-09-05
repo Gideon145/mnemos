@@ -144,6 +144,11 @@ def build_parser() -> argparse.ArgumentParser:
     mcp_cmd = sub.add_parser(
         "mcp", help="run the MCP server so any MCP client gets the memory tools"
     )
+    mcp_cmd.add_argument(
+        "--http",
+        action="store_true",
+        help="serve streamable HTTP on PORT (default 8000) instead of stdio",
+    )
 
     pay = sub.add_parser("pay", help="pay against a remembered agreement")
     pay.add_argument("name")
@@ -441,10 +446,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "mcp":
             import os
 
-            from .mcp import DB_ENV, server
+            from .mcp import DB_ENV, run_server
 
             os.environ[DB_ENV] = args.db
-            server.run()
+            run_server(http=args.http)
             return 0
 
         if args.command == "pay":
