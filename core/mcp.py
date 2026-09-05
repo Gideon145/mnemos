@@ -31,7 +31,9 @@ from .memory.tasks import Task, unfinished
 DB_ENV = "MNEMOS_DB"
 DEFAULT_DB = str(Path.home() / ".mnemos" / "memory.db")
 
-server = FastMCP("mnemos")
+# Host 0.0.0.0 keeps FastMCP from auto-enabling localhost-only DNS
+# rebinding protection, which would reject Railway/Smithery hostnames.
+server = FastMCP("mnemos", host="0.0.0.0")
 
 
 def _slug(text: str, limit: int = 48) -> str:
