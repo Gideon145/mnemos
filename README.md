@@ -30,6 +30,14 @@ take it anywhere.
   </a>
 </p>
 
+Old computers had almost no RAM. The CPU was not the bottleneck; the
+memory was. The same thing is happening with agents: models keep
+getting smarter, while agent memory still gets lost or costs tokens.
+
+**Mnemos is the RAM upgrade for agents.** Not a bigger context window.
+Durable memory that survives the session, and recall that costs zero
+tokens.
+
 Built for the Sibyl Memory Hackathon, Sep 1 to 10, 2026. One design
 principle throughout: recall answers only from what memory actually
 holds, and nothing acts until memory says so. A forgotten fact is
@@ -83,12 +91,19 @@ reproduction steps: [docs/VERIFICATION.md](docs/VERIFICATION.md).
 
 ## Why
 
-Old computers had almost no RAM, and memory is what held them back,
-not CPU power. The same is happening with agents: models keep getting
-smarter while memory still gets lost or costs tokens.
+The failure modes today, and what Mnemos does about each:
 
-Mnemos is the RAM upgrade for agents. The full case is in
-[docs/PMF.md](docs/PMF.md).
+| Failure | What happens today | What Mnemos does |
+|---|---|---|
+| The reset | Every chat starts from zero, preferences get retyped forever | Durable facts on Sibyl, recalled in fresh sessions and on fresh machines |
+| The repeat mistake | The agent forgets what went wrong and does it again | Lessons store the failure itself, with severity, and surface it next time |
+| The amnesiac payer | An agent that forgets can agree to one thing and do another | Payments only execute when a remembered, delivered agreement covers them |
+| The wrong memory | A corrected fact changes nothing: past decisions built on it keep executing | revise computes the blast radius, makes dependents suspect, and the gate stays closed until each is reconsidered |
+| The lost session | Unfinished work dies with the runtime | Tasks are durable entities; resume lists what is left |
+| The unaccountable agent | Nobody knows why a decision changed | Every write, recall, and refusal is journaled; replay shows the chain |
+
+The full case, including why durable beats context stuffing and the
+proof: [docs/PMF.md](docs/PMF.md).
 
 ## What memory improves
 
