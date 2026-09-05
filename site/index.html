@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mnemos | The agent that cannot forget</title>
   <meta name="description" content="Mnemos is an agent whose memory is the product. Durable memory on Sibyl, payments gated by memory on Base, live on Virtuals." />
+  <link rel="icon" type="image/jpeg" href="assets/logo.jpg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -16,7 +17,7 @@
 
   <header class="nav">
     <a class="brand" href="#top">
-      <span class="brand-mark">M</span>
+      <img class="brand-mark" src="assets/logo.jpg" alt="Mnemos" />
       <span>MNEMOS</span>
     </a>
     <nav>
@@ -114,25 +115,25 @@
           <pre><code>{
   "mcpServers": {
     "mnemos": {
-      "command": "mnemos",
-      "args": ["mcp", "--db", "~/.mnemos/memory.db"]
+      "url": "https://mnemos-production-2572.up.railway.app/mcp"
     }
   }
 }</code></pre>
-          <button class="copy-btn" data-copy='{"mcpServers":{"mnemos":{"command":"mnemos","args":["mcp","--db","~/.mnemos/memory.db"]}}}'>Copy</button>
+          <p class="hint">Runs on the hosted endpoint. No install, works on any machine.</p>
+          <button class="copy-btn" data-copy='{"mcpServers":{"mnemos":{"url":"https://mnemos-production-2572.up.railway.app/mcp"}}}'>Copy</button>
         </article>
         <article class="agent-card">
           <h3>VS Code / Cursor</h3>
           <pre><code>{
   "servers": {
     "mnemos": {
-      "type": "stdio",
-      "command": "mnemos",
-      "args": ["mcp"]
+      "type": "http",
+      "url": "https://mnemos-production-2572.up.railway.app/mcp"
     }
   }
 }</code></pre>
-          <button class="copy-btn" data-copy='{"servers":{"mnemos":{"type":"stdio","command":"mnemos","args":["mcp"]}}}'>Copy</button>
+          <p class="hint">Streamable HTTP, works straight from the mcp.json file.</p>
+          <button class="copy-btn" data-copy='{"servers":{"mnemos":{"type":"http","url":"https://mnemos-production-2572.up.railway.app/mcp"}}}'>Copy</button>
         </article>
         <article class="agent-card">
           <h3>Remote clients</h3>
