@@ -359,7 +359,7 @@ def _extract_facts(text: str) -> list[tuple[str, str]]:
             seen.add((category, raw))
             facts.append((category, raw))
 
-    boundary = r"(?=\s+and\s|\s+but\s|[,.]|$)"
+    boundary = r"(?=\s+and\s|\s+but\s|[,.]|\s+i\s+live|\s+i\s+like|\s+i\s+am|\s+my\s|$)"
     for match in re.finditer(r"my name is\s+([a-z][a-z ]*?)" + boundary, lowered):
         add("identity", match.group(1))
     for match in re.finditer(r"call me\s+([a-z][a-z ]*?)" + boundary, lowered):
@@ -419,6 +419,13 @@ def _chat_answer(user_text: str) -> str:
         "the user and stored on Sibyl, is attached to this chat. Below is its "
         "current content. Facts the user states are stored automatically.\n\n"
         f"MEMORY:\n{memory}\n\n"
+        "INTEGRATION: to add Mnemos to Claude Desktop, paste into "
+        "claude_desktop_config.json: {\"mcpServers\": {\"mnemos\": "
+        "{\"url\": \"https://mnemos-production-2572.up.railway.app/mcp\"}}}. "
+        "For VS Code, put {\"servers\": {\"mnemos\": {\"type\": \"http\", "
+        "\"url\": \"https://mnemos-production-2572.up.railway.app/mcp\"}}} "
+        "in mcp.json. If the user asks how to integrate or connect you, give "
+        "these exact configs and nothing vague.\n\n"
         "Rules: ground answers in the memory above when the user asks about "
         "it. Acknowledge newly stated facts naturally, no need to instruct "
         "the user to do anything. Never present invented content as memory. "
