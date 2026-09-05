@@ -9,6 +9,8 @@ take it anywhere.
 
 ![Mnemos banner](docs/images/banner.jpg)
 
+[![Smithery](https://img.shields.io/badge/Smithery-Gideon145%2Fmnemos-FF6B00?style=for-the-badge)](https://smithery.ai/server/Gideon145/mnemos)
+
 ## Why
 
 Old computers had almost no RAM, and memory is what held them back,
@@ -58,6 +60,33 @@ Memory is not the feature. What memory changes is the feature.
 - **Causal replay.** Every write, recall, and refusal is journaled. `replay`
   shows the chain that changed a decision.
 - **The deletion test, on demand.** `doctor` proves memory is load-bearing.
+
+## Use Mnemos from any agent (MCP)
+
+`mnemos mcp` serves the same 11 tools (remember, ask, lessons, tasks, replay,
+revise, blast, reconsider, suspect, and more) to any MCP client over stdio.
+
+```bash
+pip install '.[mcp]'
+mnemos mcp --db ~/.mnemos/memory.db
+```
+
+Claude Desktop / VS Code / Cursor:
+
+```json
+{
+  "mcpServers": {
+    "mnemos": {
+      "command": "mnemos",
+      "args": ["mcp", "--db", "C:\\Users\\you\\.mnemos\\memory.db"]
+    }
+  }
+}
+```
+
+Remote / hosted: `mnemos mcp --http` serves streamable HTTP on port 8000
+(`/mcp`), which is what the Dockerfile and `smithery.yaml` deploy. One-click
+install on [Smithery](https://smithery.ai/server/Gideon145/mnemos).
 
 ## Install
 
