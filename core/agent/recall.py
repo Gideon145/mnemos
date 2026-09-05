@@ -24,7 +24,21 @@ _WORD = re.compile(r"[a-zA-Z0-9]{3,}")
 
 # Question tokens that make identity records relevant regardless of
 # lexical overlap: "who am i", "my name", "your name", and friends.
-_IDENTITY_TRIGGERS = {"who", "you", "your", "name", "identit"}
+# Deliberately narrow: bare "you" or "your" appear in everyday
+# questions and must not hijack recall into the identity category.
+_IDENTITY_TRIGGERS = {"who", "name", "identit"}
+
+# Questions that ask for the whole memory, not one fact: "what do you
+# know about me", "tell me everything about me", and friends.
+_ALL_ABOUT_PHRASES = (
+    "know about me",
+    "about me",
+    "about myself",
+    "tell me about me",
+    "everything you remember",
+    "what do you remember",
+    "remember about me",
+)
 
 
 @dataclass(frozen=True)
@@ -93,6 +107,32 @@ class RecallEngine:
     def ask(self, question: str) -> RecallAnswer:
         tokens = _tokenize(question)
         matches: list[tuple[int, dict[str, Any]]] = []
+
+        # Pass 0: a question about the whole memory lists everything
+        # durable instead of searching for one fact.
+        lowered = question.lower()
+        if any(phrase in lowered for phrase in _ALL_ABOUT_PHRASES):
+            records = []
+            for category in DURABLE_CATEGORIES:
+                records.extend(self._store.list_durable(category))
+            if not records:
+                return RecallAnswer(
+                    question=question,
+                    answer="I don't remember anything about that. "
+                    "Tell me, and I will keep it.",
+                    found_anything=False,
+                    confidence=0.0,
+                )
+            lines = [f"- {_describe(record)}" for record in records]
+            return RecallAnswer(
+                question=question,
+                answer="What I hold about you:\n" + "\n".join(lines),
+                found_anything=True,
+                confidence=0.9,
+                sources=tuple(
+                    f"{r.get('category')}:{r.get('name')}" for r in records
+                ),
+            )
 
         # Pass 1: the store's own full-text search over entities.
         seen: set[tuple[str, str]] = set()
