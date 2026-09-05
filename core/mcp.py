@@ -15,13 +15,13 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-from ..agent import RecallEngine
-from ..agent.recap import recap
-from ..agent.replay import replay
-from ..memory.lessons import learn
-from ..memory.revision import blast_radius, is_suspect, reconsider, revise
-from ..memory.store import MemoryStore
-from ..memory.tasks import Task, unfinished
+from .agent import RecallEngine
+from .agent.recap import recap
+from .agent.replay import replay
+from .memory.lessons import learn
+from .memory.revision import blast_radius, is_suspect, reconsider, revise
+from .memory.store import MemoryStore
+from .memory.tasks import Task, unfinished
 
 DB_ENV = "MNEMOS_DB"
 DEFAULT_DB = str(Path.home() / ".mnemos" / "memory.db")
