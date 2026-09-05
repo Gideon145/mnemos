@@ -72,7 +72,30 @@ mnemos pay banner-job 160 --live --network mainnet
 > mainnet. The on-chain action happened because memory said so. The receipt is
 > in the repo."
 
-## Beat 6 — The deletion test (~20s)
+## Beat 6 — Revision: a wrong memory can no longer pay out (~45s)
+
+```
+mnemos link preference contractor_rate_is_40_per_hour agreement banner-job
+mnemos revise preference contractor_rate_is_40_per_hour 60 --reason "renotiated"
+mnemos blast preference contractor_rate_is_40_per_hour
+mnemos pay banner-job 160
+```
+
+> "The contractor rate was 40 — and the agreement was built on it. The agent
+> corrects the fact. Mnemos walks the dependency graph: that agreement is
+> suspect. The gate refuses: 'agreement is suspect, depends on revised memory'.
+> A wrong memory just stopped a payout."
+
+```
+mnemos reconsider agreement banner-job --valid --reason "fixed price"
+mnemos pay banner-job 160
+```
+
+> "The agent explicitly reconsiders, the gate reopens. What memory improved:
+> when a memory changes, everything it contaminated stops until reviewed.
+> No other agent does this."
+
+## Beat 7 — The deletion test (~20s)
 
 ```
 mnemos doctor
@@ -84,9 +107,10 @@ mnemos doctor
 ## Close (~15s)
 
 > "Recall is table stakes. Mnemos adds coordination between agents, a payment
-> gate that cannot run without memory, and lessons that veto repeat failures.
-> The agent can be wrong. The gate can't."
+> gate that cannot run without memory, lessons that veto repeat failures, and
+> revision: when a memory is corrected, everything it touched is suspect until
+> reviewed. The agent can be wrong. The gate can't."
 
 ---
 
-Total ≈ 3m30s. One take, no cuts — exactly what the gate requires.
+Total ≈ 4m15s. One take, no cuts — exactly what the gate requires.

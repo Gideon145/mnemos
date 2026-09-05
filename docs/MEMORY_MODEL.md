@@ -75,6 +75,27 @@ draft ──confirm──► agreed ──delegate──► delegated ──outc
 - References link agreements to remembered preferences ("use my remembered
   style guide") so memory entities compose, they don't just sit
 
+## Revision (correction with blast radius)
+
+When a fact is corrected, the past does not silently disappear. `revise`
+walks the recorded dependencies and marks everything contaminated:
+
+1. The entity's old value is appended to `body.history` (append-only) and
+   the new value is written.
+2. A revision event is journaled and its event id becomes the revision id.
+3. Blast radius (deterministic, no model):
+   - decisions: journal events whose `evaluated.sources` cite the fact;
+   - one hop: agreements/tasks whose `body.linked` contains the fact;
+   - two hops: entities linked from an affected entity.
+4. Each affected entity gets a `tainted_by` entry carrying the revision id.
+5. The payment gate refuses suspect agreements with the exact reason until
+   `reconsider` reviews each revision: `valid` clears that taint, `invalid`
+   keeps the gate closed. Reviews are journaled per revision id.
+
+An entity is suspect while any taint entry lacks a valid review, so two
+revisions of the same fact need two reconsiderations. Nothing is deleted:
+history, revisions, suspicion, and reviews are all journal records.
+
 ## Coordination
 
 Two or more agents (Mnemos + Virtuals specialists) share state exclusively

@@ -98,6 +98,16 @@ no outcome records.
 - Delegation: specialist agents are remembered (address, capability, outcome
   history) in the durable tier; outcomes are written back after each job.
 
+### 8. Revision (correction with blast radius)
+
+- `revise` writes the correction, appends the superseded value to history,
+  journals a revision event, then walks dependencies through the journal
+  (`evaluated.sources`) and entity links (one and two hops) — no model calls.
+- Affected agreements and tasks get `tainted_by` entries; the payment gate
+  refuses them with an exact reason until `reconsider` reviews each revision.
+- `blast` reports the radius read-only; `suspect` lists what is currently
+  gated. All state is journal records: nothing is deleted.
+
 ## Directory layout (planned)
 
 ```

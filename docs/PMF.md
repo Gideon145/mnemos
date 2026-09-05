@@ -21,6 +21,7 @@ tokens.
 | The reset | Every chat starts from zero, preferences get retyped forever | Durable facts on Sibyl, recalled in fresh sessions and on fresh machines |
 | The repeat mistake | The agent forgets what went wrong and does it again | Lessons store the failure itself, with severity, and surface it next time |
 | The amnesiac payer | An agent that forgets can agree to one thing and do another | Payments only execute when a remembered, delivered agreement covers them |
+| The wrong memory | A corrected fact changes nothing: past decisions built on it keep executing | revise computes the blast radius, makes dependents suspect, and the gate stays closed until each is reconsidered |
 | The lost session | Unfinished work dies with the runtime | Tasks are durable entities; resume lists what is left |
 | The unaccountable agent | Nobody knows why a decision changed | Every write, recall, and refusal is journaled; replay shows the chain |
 
@@ -54,3 +55,6 @@ it."
 - Cold start: a keepsake pack restores memory on a fresh machine.
 - Real money: a memory-gated transaction on Base mainnet, linked in
   docs/VERIFICATION.md.
+- Wrong memory: `mnemos revise` taints every decision and agreement that
+  depended on a corrected fact, and the payment gate refuses until
+  `reconsider` reviews them.

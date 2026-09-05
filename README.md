@@ -30,6 +30,10 @@ Memory is not the feature. What memory changes is the feature.
   request, opposite outcomes, caused by memory state alone.
 - **Failures.** A high severity lesson linked to an agreement vetoes its
   payments until the lesson is resolved. Mistakes stop repeating.
+- **Corrections.** When a remembered fact is revised, everything that
+  depended on it becomes suspect and the payment gate closes until each
+  affected item is explicitly reconsidered. A wrong memory can no longer
+  keep paying out.
 - **Time.** Tasks survive restarts and `resume` lists what is left, so
   work never dies with the session.
 
@@ -46,6 +50,10 @@ Memory is not the feature. What memory changes is the feature.
   plain JSON with a sha256 digest: commit them to git like any backup.
 - **Lessons.** Failures are stored with severity, so the same mistake stays
   wrong only once.
+- **Revision with blast radius.** `revise` corrects a fact, computes what
+  depended on it deterministically, and marks affected agreements and tasks
+  suspect. The payment gate refuses them until `reconsider` reviews each one.
+  History is append-only: every superseded value stays in the journal.
 - **Tasks that survive restarts.** `resume` lists unfinished work, work first.
 - **Causal replay.** Every write, recall, and refusal is journaled. `replay`
   shows the chain that changed a decision.
@@ -76,6 +84,7 @@ site in under two minutes.
 | Causal replay | `mnemos replay` | `core/agent/replay.py` |
 | Day summary | `mnemos recap` | `core/agent/recap.py` |
 | Reflection | `mnemos reflect` / `proposals` / `accept` | `core/memory/reflection.py` |
+| Revision | `mnemos revise` / `blast` / `reconsider` / `suspect` | `core/memory/revision.py` |
 | Deletion test | `mnemos doctor` | `core/memory/doctor.py` |
 
 ## The proof in one take
@@ -90,6 +99,10 @@ mnemos keepsake import my-mnemos.mne
 mnemos ask "how do I like answers and what is the contractor rate"
 mnemos advance contractor --to delivered
 mnemos pay contractor 160
+mnemos revise preference contractor_rate_is_40_per_hour 60 --reason corrected
+mnemos pay contractor 160   # refused: agreement is suspect, reconsider first
+mnemos reconsider agreement contractor --valid --reason "fixed price"
+mnemos pay contractor 160   # gate reopened, payment sent
 mnemos doctor
 ```
 

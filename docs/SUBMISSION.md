@@ -15,6 +15,7 @@ https://github.com/Gideon145/mnemos
 - summarization
 - reflection
 - consolidation
+- correction / revision (blast radius + execution gating)
 
 (Semantic search intentionally NOT ticked: Mnemos uses Sibyl FTS plus a
 deterministic lexical fallback, not embeddings.)
@@ -46,9 +47,16 @@ the deletion test proving the build is load-bearing.
    The agreement advances to paid and the tx hash is journaled.
 5. A keepsake exports everything. A fresh agent on a fresh machine
    imports it and recalls the same facts.
-6. The journal is reflected into proposals, which are accepted or
+6. A remembered fact is revised with `mnemos revise`. The system
+   deterministically computes which decisions and entities depended on
+   it, marks them suspect, and the payment gate refuses the linked
+   agreement: "REFUSED: agreement 'fencing' is suspect because it
+   depends on revised memory contractor_rate." A `reconsider --valid`
+   review reopens the gate; `reconsider --invalid` keeps it closed.
+   Nothing is deleted — every superseded value stays in history.
+7. The journal is reflected into proposals, which are accepted or
    rejected explicitly.
-7. `mnemos doctor` deletes the memory and shows recall emptying and the
+8. `mnemos doctor` deletes the memory and shows recall emptying and the
    gate closing.
 
 ## How memory improves the build
@@ -60,6 +68,9 @@ the deletion test proving the build is load-bearing.
   because memory state changed.
 - Failures: a high severity lesson vetoes linked payments until
   resolved, so repeat mistakes are blocked by construction.
+- Corrections: when an agent learns that a memory it acted on was
+  wrong, the system determines what that mistake contaminated and
+  prevents the agent from continuing as if nothing happened.
 - Time: tasks are durable and resume lists unfinished work.
 
 ## The two partner stacks

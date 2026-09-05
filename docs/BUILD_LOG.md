@@ -64,3 +64,27 @@ The agent learns from pain, and runs on Virtuals compute.
 65 tests passing.
 
 Public post: https://x.com/mnemos_agent/status/2095726174433325315
+
+## Day 5 (Sep 5, 2026)
+
+The agent's corrections now govern its actions: `mnemos revise`.
+
+- deep research pass across shipped memory stacks, agent governance
+  frameworks, and fresh papers to find a missing primitive; the gap was
+  correction: nobody turns a corrected memory into an execution gate
+- revise: correcting a fact computes the deterministic blast radius of
+  that memory — decisions whose journaled sources cite it, entities
+  linked to it (two hops), and their payments — and marks them suspect
+- reconsider: a suspect entity is reviewed per revision; valid clears
+  that taint and reopens the gate, invalid keeps it closed
+- the payment gate refuses suspect agreements with an exact reason:
+  "agreement 'fencing' is suspect: depends on revised memory
+  preference:contractor_rate_is_40; reconsider first"
+- append-only history: every superseded value stays in the entity, and
+  every revision, suspicion, and review is journaled immutably
+- 19-case test matrix: direct, two-hop, unrelated, multi-source,
+  re-flag after reconsideration, history immutability, and more
+- closest academic work cited honestly in docs/PRIOR_WORK.md
+  (arXiv:2608.10502 does post-failure computation recovery, not gating)
+
+84 tests passing.
