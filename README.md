@@ -9,7 +9,26 @@ take it anywhere.
 
 ![Mnemos banner](docs/images/banner.jpg)
 
-[![Smithery](https://img.shields.io/badge/Smithery-mnemos%2Fmnemos-FF6B00?style=for-the-badge)](https://smithery.ai/servers/mnemos/mnemos)
+<p align="center">
+  <a href="https://mnemos-production-2572.up.railway.app/">
+    <img src="https://img.shields.io/badge/LIVE-playground-3CB878?style=for-the-badge" alt="Live playground" />
+  </a>
+  <a href="https://mnemos-production-2572.up.railway.app/mcp">
+    <img src="https://img.shields.io/badge/MCP-hosted_endpoint-0f766e?style=for-the-badge" alt="Hosted MCP" />
+  </a>
+  <a href="https://smithery.ai/servers/mnemos/mnemos">
+    <img src="https://img.shields.io/badge/Smithery-mnemos%2Fmnemos-FF6B00?style=for-the-badge" alt="Smithery" />
+  </a>
+  <a href="https://x.com/mnemos_agent">
+    <img src="https://img.shields.io/badge/X-@mnemos__agent-1DA1F2?style=for-the-badge&logo=x&logoColor=white" alt="X" />
+  </a>
+  <a href="https://basescan.org/tx/0x1ed5b2674123e70a4de87ca9ceebad38f961fc6612c2206bb1456356ae46d194">
+    <img src="https://img.shields.io/badge/Base-mainnet_tx-0052FF?style=for-the-badge" alt="Base mainnet tx" />
+  </a>
+  <a href="docs/VERIFICATION.md">
+    <img src="https://img.shields.io/badge/Virtuals-ACP_live_dispatch-8B5CF6?style=for-the-badge" alt="Virtuals ACP" />
+  </a>
+</p>
 
 ## Why
 
@@ -143,23 +162,56 @@ mnemos doctor
 A live Base mainnet payment from a memory-gated decision is recorded in
 [docs/VERIFICATION.md](docs/VERIFICATION.md), with the explorer link.
 
+## Architecture
+
+```
+you / any MCP client
+        |
+        v
+   playground & hosted MCP   -------- stdio: mnemos mcp
+        |
+        v
+     core (one memory path)
+        |        |
+        |        +--- recall engine (FTS + lexical, honest empty answer)
+        |        +--- agreements (draft -> agreed -> delegated -> delivered -> paid)
+        |        +--- lessons (severity + scar gate)
+        |        +--- revision (blast radius -> suspect -> reconsider)
+        |        +--- keepsakes (.mne portable packs)
+        |        +--- journal seal (tamper-evident hash chain)
+        |
+   Sibyl Memory        PostgreSQL-free, local SQLite + FTS5
+        |
+        +----------> payment gate ----------> Base (mainnet, verified tx)
+        +----------> dispatch ---------------> Virtuals ACP (live, billed)
+```
+
 ## Honest status
 
-- Base execution is verified live on mainnet, re-run Sep 5 on the final
-  code (tx in docs/VERIFICATION.md).
-- Virtuals ACP dispatch is verified live with a billed response, re-run
-  Sep 5 (response id in docs/VERIFICATION.md).
-- No semantic search. Recall uses Sibyl's FTS plus a deterministic lexical
-  fallback, on purpose.
+| Area | Status | Proof |
+|---|---|---|
+| Memory core, recall, gate, lessons, tasks, revision | shipped, 110 tests green | `pytest` |
+| Base mainnet payment from a gated decision | verified live | `docs/VERIFICATION.md` |
+| Virtuals ACP dispatch | verified live, billed | `docs/VERIFICATION.md` |
+| Hosted MCP endpoint, Smithery, Railway | live | badges above |
+| Playground with agentic chat | live | badge above |
+| Tamper-evident journal seal | shipped | `mnemos seal`, `mnemos doctor` |
+| Pending payment claims | shipped | `tests/test_payments.py` |
+| Measured ablation numbers | shipped, seeded | `scripts/ablation.py` |
+| Demo video | pending | script in `docs/DEMO_SCRIPT.md` |
+| Semantic/vector search | deliberately not shipped | recall is FTS + deterministic fallback |
+| Production auth on the hosted endpoint | deliberately not claimed | demo surface |
 
 ## Docs
 
+- [Judge guide](docs/JUDGE_GUIDE.md) (claim -> file:line, test, live artifact)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Memory model](docs/MEMORY_MODEL.md)
 - [Build plan](docs/PLAN.md)
 - [Build log](docs/BUILD_LOG.md)
 - [Demo script](docs/DEMO_SCRIPT.md)
 - [Verification](docs/VERIFICATION.md)
+- [Public submission](docs/PUBLIC_SUBMISSION.md)
 - [Prior work declaration](docs/PRIOR_WORK.md)
 
 ## License
