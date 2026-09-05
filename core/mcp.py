@@ -460,11 +460,13 @@ def run_server(http: bool = False) -> None:
         return
     import uvicorn
     from contextlib import asynccontextmanager
+    from pathlib import Path as _Path
     from starlette.applications import Starlette
     from starlette.concurrency import run_in_threadpool
     from starlette.middleware.cors import CORSMiddleware
-    from starlette.responses import JSONResponse
+    from starlette.responses import FileResponse, JSONResponse
     from starlette.routing import Mount, Route
+    from starlette.staticfiles import StaticFiles
 
     async def chat_endpoint(request: Any) -> JSONResponse:
         try:
@@ -486,13 +488,35 @@ def run_server(http: bool = False) -> None:
         async with base.router.lifespan_context(base):
             yield
 
-    app: Any = Starlette(
-        routes=[
-            Route("/chat", chat_endpoint, methods=["POST"]),
-            Mount("/", app=base),
-        ],
-        lifespan=combined_lifespan,
-    )
+    site_dir = os.environ.get("SITE_DIR", "")
+    routes: list[Any] = [Route("/chat", chat_endpoint, methods=["POST"])]
+    if site_dir and _Path(site_dir).is_dir():
+        index_file = _Path(site_dir) / "index.html"
+
+        async def home(_request: Any) -> Any:
+            return FileResponse(index_file)
+
+        routes += [
+            Route("/", home),
+            Mount(
+                "/assets",
+                app=StaticFiles(directory=str(_Path(site_dir) / "assets")),
+                name="assets",
+            ),
+            Mount(
+                "/css",
+                app=StaticFiles(directory=str(_Path(site_dir) / "css")),
+                name="css",
+            ),
+            Mount(
+                "/js",
+                app=StaticFiles(directory=str(_Path(site_dir) / "js")),
+                name="js",
+            ),
+        ]
+    routes.append(Mount("/", app=base))
+
+    app: Any = Starlette(routes=routes, lifespan=combined_lifespan)
     # Browser clients (the live playground) need CORS plus access to the
     # session header the streamable-http handshake returns.
     app = CORSMiddleware(

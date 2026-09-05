@@ -391,6 +391,45 @@ footer {
   .reveal { opacity: 1; transform: none; transition: none; }
 }
 
+/* measured */
+.ablation-table {
+  margin-top: 36px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  max-width: 760px;
+}
+.ab-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 90px;
+  gap: 12px;
+  padding: 15px 22px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  align-items: center;
+  font-size: 0.95rem;
+}
+.ab-row:last-child { border-bottom: none; }
+.ab-row.head {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.ab-row .ok { color: var(--teal); font-weight: 700; }
+.ab-row .bad { color: var(--orange); font-weight: 700; }
+.proof-pills { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+.pill {
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  background: var(--teal-dim);
+  color: var(--teal);
+  border-radius: 999px;
+  padding: 9px 18px;
+  font-size: 0.88rem;
+}
+.pill:hover { text-decoration: none; background: rgba(45, 212, 191, 0.22); }
+
 /* use on your agent */
 .agent-grid {
   display: grid;

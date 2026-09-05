@@ -23,6 +23,7 @@
     <nav>
       <a href="#gate">The gate</a>
       <a href="#improves">What memory improves</a>
+      <a href="#measured">Measured</a>
       <a href="#agent">Use on your agent</a>
       <a href="#playground">Playground</a>
     </nav>
@@ -103,6 +104,24 @@
           <h3>Corrections</h3>
           <p>When a memory turns out wrong, everything built on it becomes suspect until reviewed. Nothing deleted, all journaled.</p>
         </article>
+      </div>
+    </section>
+
+    <section class="measured reveal" id="measured">
+      <h2>Measured, not marketed</h2>
+      <p class="lede">Seeded, reproducible runs of the real gate. 12 trials, seed 1337, no fabricated numbers.</p>
+      <div class="ablation-table">
+        <div class="ab-row head"><span>Arm</span><span>Allowed</span><span>Refused</span></div>
+        <div class="ab-row"><span>Memory on: remembered, delivered agreement</span><strong class="ok">12</strong><span>0</span></div>
+        <div class="ab-row"><span>Memory off: same request, wiped store</span><span>0</span><strong class="bad">12</strong></div>
+        <div class="ab-row"><span>Revision on: suspect until reconsider</span><span>0</span><strong class="bad">12</strong></div>
+        <div class="ab-row"><span>Revision off: same agreement, no suspect check</span><strong class="ok">12</strong><span>0</span></div>
+      </div>
+      <p class="hint">Reproduce with scripts/ablation.py. Pinned by tests.</p>
+      <div class="proof-pills">
+        <a class="pill" href="https://basescan.org/tx/0x1ed5b2674123e70a4de87ca9ceebad38f961fc6612c2206bb1456356ae46d194">Base mainnet tx</a>
+        <a class="pill" href="https://smithery.ai/servers/mnemos/mnemos">Smithery</a>
+        <a class="pill" href="https://x.com/mnemos_agent">Build log</a>
       </div>
     </section>
 
