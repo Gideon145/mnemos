@@ -143,6 +143,11 @@ class SuspectResult:
     suspect: list[str] = field(default_factory=list)
 
 
+@dataclass
+class ResetResult:
+    cleared: int
+
+
 @server.tool(structured_output=True)
 def remember(text: str, category: str = "preference") -> RememberResult:
     """Store a durable fact. Categories: preference, lesson, identity."""
@@ -306,6 +311,24 @@ def suspect() -> SuspectResult:
                 if is_suspect_memory(store, category, name):
                     blocked.append(f"{category} {name}")
         return SuspectResult(suspect=blocked)
+    finally:
+        store.close()
+
+
+@server.tool(structured_output=True)
+def reset() -> ResetResult:
+    """Wipe every durable entity so the memory starts fresh. The journal stays."""
+    from .memory.store import DURABLE_CATEGORIES
+
+    store = _store()
+    try:
+        cleared = 0
+        for category in DURABLE_CATEGORIES:
+            for record in store.list_durable(category):
+                store.forget_durable(category, record.get("name"))
+                cleared += 1
+        store.record_event(acted=[f"reset memory: {cleared} entities cleared"])
+        return ResetResult(cleared=cleared)
     finally:
         store.close()
 
