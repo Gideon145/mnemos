@@ -316,8 +316,18 @@ def run_server(http: bool = False) -> None:
         server.run()
         return
     import uvicorn
+    from starlette.middleware.cors import CORSMiddleware
 
     app = server.streamable_http_app()
+    # Browser clients (the live playground) need CORS plus access to the
+    # session header the streamable-http handshake returns.
+    app = CORSMiddleware(
+        app,
+        allow_origins=["*"],
+        allow_methods=["GET", "POST", "DELETE"],
+        allow_headers=["*"],
+        expose_headers=["Mcp-Session-Id"],
+    )
     port = int(os.environ.get("PORT", "8000"))
     uvicorn.run(app, host="0.0.0.0", port=port)
 
