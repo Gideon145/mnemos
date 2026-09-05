@@ -70,6 +70,47 @@ def test_dry_run_journals_executor_name(tmp_path):
         store.close()
 
 
+def test_pending_claim_blocks_duplicate_intent(tmp_path):
+    store = MemoryStore(tmp_path / "memory.db")
+    try:
+        _delivered_agreement(store)
+        store.set_working_state(
+            "payment:contractor:160",
+            {"status": "pending", "agreement": "contractor", "amount": 160},
+        )
+        outcome = pay(store, "contractor", 160)
+        assert outcome.allowed is False
+        assert "already claimed" in outcome.reason
+        assert "duplicate" in outcome.reason
+    finally:
+        store.close()
+
+
+def test_failed_submit_marks_claim_failed_and_retry_passes(tmp_path):
+    store = MemoryStore(tmp_path / "memory.db")
+
+    class BrokenExecutor:
+        name = "broken"
+
+        def submit(self, intent):
+            raise RuntimeError("rpc down")
+
+    try:
+        _delivered_agreement(store)
+        try:
+            pay(store, "contractor", 160, executor=BrokenExecutor())
+        except RuntimeError:
+            pass
+        claim = store.get_working_state("payment:contractor:160")
+        assert claim["status"] == "failed"
+
+        outcome = pay(store, "contractor", 160)
+        assert outcome.allowed is True
+        assert store.get_working_state("payment:contractor:160")["status"] == "paid"
+    finally:
+        store.close()
+
+
 def _acted_lines(event):
     acted = event.get("acted")
     if isinstance(acted, str):

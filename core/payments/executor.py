@@ -2,12 +2,11 @@
 
 The gate decides; the executor acts. `pay` first asks the deterministic
 gate whether a remembered, delivered agreement covers the amount. Only
-then does it hand a PaymentIntent to an executor.
-
-Every outcome is journaled: refusals leave an audit trail, and a
-successful payment advances the agreement to 'paid', so memory reflects
-what the agent did. There is no code path that sends money without a
-passing gate.
+then does it claim the intent in memory (compare-and-set) and hand a
+PaymentIntent to an executor. A pending claim blocks concurrent retries
+before any signature exists, so the same intent can never be broadcast
+twice: paid only on receipt, reverted marks failed, unconfirmed stays
+pending.
 
 Executors
 ---------
@@ -22,6 +21,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any, Protocol
 
 from ..memory.agreement import Agreement
@@ -150,6 +150,14 @@ class BaseExecutor:
         }
 
 
+def _intent_key(agreement_name: str, amount: float) -> str:
+    return f"payment:{agreement_name}:{amount}"
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
 def pay(
     store: MemoryStore,
     agreement_name: str,
@@ -157,7 +165,7 @@ def pay(
     *,
     executor: Executor | None = None,
 ) -> PaymentOutcome:
-    """Execute a payment only if memory authorizes it."""
+    """Execute a payment only if memory authorizes it, claiming first."""
     executor = executor or DryRunExecutor()
 
     result = evaluate_payment(store, agreement_name, amount)
@@ -173,6 +181,35 @@ def pay(
             amount=amount,
         )
 
+    # Compare-and-set claim: a pending or settled claim blocks any
+    # concurrent retry of the same intent before a signature exists.
+    key = _intent_key(agreement_name, amount)
+    existing = store.get_working_state(key)
+    if existing and existing.get("status") in ("pending", "paid"):
+        reason = (
+            f"intent {agreement_name} {amount} already claimed "
+            f"({existing.get('status')}); refusing duplicate"
+        )
+        store.record_event(
+            evaluated={"agreement": agreement_name, "amount": amount},
+            acted=[f"payment refused: {reason}"],
+        )
+        return PaymentOutcome(
+            allowed=False,
+            reason=reason,
+            agreement=agreement_name,
+            amount=amount,
+        )
+    store.set_working_state(
+        key,
+        {
+            "status": "pending",
+            "agreement": agreement_name,
+            "amount": amount,
+            "at": _now(),
+        },
+    )
+
     agreement = Agreement.open(store, agreement_name)
     body = agreement.body if agreement is not None else {}
     intent = PaymentIntent(
@@ -181,11 +218,35 @@ def pay(
         counterparty=body.get("counterparty"),
         note=body.get("note"),
     )
-    receipt = executor.submit(intent)
+    try:
+        receipt = executor.submit(intent)
+    except Exception as error:
+        store.set_working_state(
+            key,
+            {
+                "status": "failed",
+                "agreement": agreement_name,
+                "amount": amount,
+                "error": str(error),
+                "at": _now(),
+            },
+        )
+        raise
     transaction = receipt.get("transaction")
 
     if agreement is not None:
         agreement.advance("paid")
+
+    store.set_working_state(
+        key,
+        {
+            "status": "paid",
+            "agreement": agreement_name,
+            "amount": amount,
+            "transaction": transaction,
+            "at": _now(),
+        },
+    )
 
     action = f"payment sent: {agreement_name} {amount}"
     if transaction:
