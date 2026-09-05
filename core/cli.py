@@ -141,6 +141,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     suspect_cmd = sub.add_parser("suspect", help="list suspect entities")
 
+    mcp_cmd = sub.add_parser(
+        "mcp", help="run the MCP server so any MCP client gets the memory tools"
+    )
+
     pay = sub.add_parser("pay", help="pay against a remembered agreement")
     pay.add_argument("name")
     pay.add_argument("amount", type=float)
@@ -432,6 +436,15 @@ def main(argv: list[str] | None = None) -> int:
                         )
             if not found:
                 print("(nothing suspect)")
+            return 0
+
+        if args.command == "mcp":
+            import os
+
+            from .mcp import DB_ENV, server
+
+            os.environ[DB_ENV] = args.db
+            server.run()
             return 0
 
         if args.command == "pay":
