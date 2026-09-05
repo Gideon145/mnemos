@@ -156,3 +156,9 @@ def test_extract_facts_from_compound_messages():
     facts2 = mcp._extract_facts("my name is john, i like cats and dogs")
     assert ("identity", "john") in facts2
     assert any("i like" in value for _, value in facts2)
+
+
+def test_name_capture_stops_at_next_fact_without_and():
+    facts = mcp._extract_facts("my name is john i live in india")
+    assert ("identity", "john") in facts
+    assert ("preference", "i live in india") in facts
