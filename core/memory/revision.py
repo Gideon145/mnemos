@@ -75,8 +75,10 @@ def suspect_reasons(store: MemoryStore, category: str, name: str) -> list[str]:
 
 def blast_radius(store: MemoryStore, fact_ref: str) -> dict[str, Any]:
     """Deterministic walk: which decisions and entities depend on a fact."""
+    events = store.timeline(limit=1000)
+
     decisions: list[dict[str, Any]] = []
-    for event in store.timeline(limit=1000):
+    for event in events:
         sources = (event.get("evaluated") or {}).get("sources")
         if isinstance(sources, list) and fact_ref in sources:
             decisions.append(event)
@@ -106,11 +108,12 @@ def blast_radius(store: MemoryStore, fact_ref: str) -> dict[str, Any]:
 
     payment_events = []
     for agreement in affected["agreement"]:
-        for event in store.timeline(limit=1000):
+        for event in events:
             evaluated = event.get("evaluated") or {}
-            if evaluated.get("agreement") == agreement and "payment" in " ".join(
-                str(event.get("acted") or [])
-            ):
+            # The SDK stores acted strings with spaces between every
+            # character; collapse whitespace before matching.
+            acted_text = " ".join(str(event.get("acted") or [])).replace(" ", "")
+            if evaluated.get("agreement") == agreement and "payment" in acted_text:
                 payment_events.append(event)
 
     return {

@@ -87,6 +87,21 @@ def test_blast_radius_counts_decision_events(tmp_path):
         store.close()
 
 
+def test_blast_radius_counts_payment_events(tmp_path):
+    store = MemoryStore(tmp_path / "memory.db")
+    try:
+        _fact(store)
+        _delivered(store)
+        link(store, "preference", "rate", "agreement", "fencing")
+        store.record_event(
+            evaluated={"agreement": "fencing", "amount": 200.0},
+            acted=["payment sent: fencing 200 (dry run)"],
+        )
+        assert blast_radius(store, "preference:rate")["payments"] == 1
+    finally:
+        store.close()
+
+
 def test_payment_blocked_while_suspect(tmp_path):
     store = MemoryStore(tmp_path / "memory.db")
     try:

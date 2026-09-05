@@ -26,6 +26,7 @@ from .memory.reflection import accept as accept_proposal
 from .memory.reflection import pending as pending_proposals
 from .memory.reflection import reflect as run_reflection
 from .memory.reflection import reject as reject_proposal
+from .memory.revision import blast_radius, is_suspect, reconsider, revise, suspect_reasons
 from .memory.store import MemoryStore
 
 DEFAULT_DB = str(Path.home() / ".mnemos" / "memory.db")
@@ -120,6 +121,25 @@ def build_parser() -> argparse.ArgumentParser:
     link_cmd.add_argument("name_b")
 
     doctor = sub.add_parser("doctor", help="prove memory is load-bearing")
+
+    revise_cmd = sub.add_parser("revise", help="correct a fact and taint what depended on it")
+    revise_cmd.add_argument("category")
+    revise_cmd.add_argument("name")
+    revise_cmd.add_argument("value")
+    revise_cmd.add_argument("--reason", default=None)
+
+    blast = sub.add_parser("blast", help="show the blast radius of a fact")
+    blast.add_argument("category")
+    blast.add_argument("name")
+
+    reconsider_cmd = sub.add_parser("reconsider", help="review a suspect entity")
+    reconsider_cmd.add_argument("category")
+    reconsider_cmd.add_argument("name")
+    reconsider_cmd.add_argument("--valid", action="store_true")
+    reconsider_cmd.add_argument("--invalid", action="store_true")
+    reconsider_cmd.add_argument("--reason", default=None)
+
+    suspect_cmd = sub.add_parser("suspect", help="list suspect entities")
 
     pay = sub.add_parser("pay", help="pay against a remembered agreement")
     pay.add_argument("name")
@@ -352,6 +372,67 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"  [{mark}] {name}: {detail}")
             print("memory is load-bearing" if report.healthy else "memory is broken")
             return 0 if report.healthy else 1
+
+        if args.command == "revise":
+            try:
+                result = revise(
+                    store, args.category, args.name, args.value, reason=args.reason
+                )
+            except ValueError as error:
+                print(f"refused: {error}")
+                return 1
+            print(
+                f"revised {result['fact']}: {result['from']} -> {result['to']}"
+            )
+            print(
+                f"blast radius: {result['decisions_affected']} decisions, "
+                f"{result['payments_affected']} payments"
+            )
+            for item in result["newly_suspect"]:
+                print(f"  suspect: {item}")
+            if not result["newly_suspect"]:
+                print("  nothing depended on this fact")
+            return 0
+
+        if args.command == "blast":
+            radius = blast_radius(store, f"{args.category}:{args.name}")
+            print(
+                f"blast radius of {radius['fact']}: {radius['decisions']} decisions, "
+                f"{radius['agreements']} agreements, {radius['tasks']} tasks, "
+                f"{radius['payments']} payments"
+            )
+            return 0
+
+        if args.command == "reconsider":
+            decision = "valid" if args.valid else "invalid" if args.invalid else None
+            if decision is None:
+                print("pass --valid or --invalid")
+                return 1
+            try:
+                result = reconsider(
+                    store, args.category, args.name, decision, reason=args.reason
+                )
+            except ValueError as error:
+                print(f"refused: {error}")
+                return 1
+            state = "gate reopened" if result["reopened"] else "still suspect"
+            print(f"reconsidered {args.category} {args.name}: {decision}, {state}")
+            return 0
+
+        if args.command == "suspect":
+            found = False
+            for category in ("agreement", "task"):
+                for record in store.list_durable(category):
+                    name = record.get("name")
+                    if is_suspect(store, category, name):
+                        found = True
+                        print(
+                            f"  {category} {name}: "
+                            f"{', '.join(suspect_reasons(store, category, name))}"
+                        )
+            if not found:
+                print("(nothing suspect)")
+            return 0
 
         if args.command == "pay":
             executor = (
