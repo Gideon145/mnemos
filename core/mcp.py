@@ -11,9 +11,12 @@ from __future__ import annotations
 
 import os
 import re
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import Icon
 
 from .agent import RecallEngine
 from .agent.recap import recap
@@ -33,7 +36,24 @@ DEFAULT_DB = str(Path.home() / ".mnemos" / "memory.db")
 
 # Host 0.0.0.0 keeps FastMCP from auto-enabling localhost-only DNS
 # rebinding protection, which would reject Railway/Smithery hostnames.
-server = FastMCP("mnemos", host="0.0.0.0")
+server = FastMCP(
+    "mnemos",
+    host="0.0.0.0",
+    instructions=(
+        "Mnemos is an agent with durable memory on Sibyl. Store facts, ask "
+        "recall questions, record lessons, manage tasks that survive "
+        "restarts, and use the revision gate: when a fact is corrected, "
+        "everything that depended on it becomes suspect and the payment "
+        "gate refuses until each item is explicitly reconsidered."
+    ),
+    website_url="https://github.com/Gideon145/mnemos",
+    icons=[
+        Icon(
+            src="https://raw.githubusercontent.com/Gideon145/mnemos/main/docs/images/banner.jpg",
+            sizes=["1024x1024"],
+        )
+    ],
+)
 
 
 def _slug(text: str, limit: int = 48) -> str:
@@ -46,8 +66,85 @@ def _store() -> MemoryStore:
     return MemoryStore(os.environ.get(DB_ENV, DEFAULT_DB))
 
 
-@server.tool()
-def remember(text: str, category: str = "preference") -> str:
+# ------------------------------------------------------------------ #
+# typed results
+# ------------------------------------------------------------------ #
+@dataclass
+class RememberResult:
+    category: str
+    name: str
+
+
+@dataclass
+class AskResult:
+    question: str
+    answer: str
+    found: bool
+    sources: list[str] = field(default_factory=list)
+
+
+@dataclass
+class LessonResult:
+    severity: str
+    text: str
+
+
+@dataclass
+class TaskResult:
+    name: str
+    objective: str
+
+
+@dataclass
+class ResumeResult:
+    unfinished: list[dict[str, str]]
+
+
+@dataclass
+class RecapResult:
+    text: str
+
+
+@dataclass
+class ReplayResult:
+    subject: str
+    text: str
+
+
+@dataclass
+class ReviseResult:
+    revision_id: str
+    fact: str
+    old: str
+    new: str
+    decisions_affected: int
+    payments_affected: int
+    newly_suspect: list[str] = field(default_factory=list)
+
+
+@dataclass
+class BlastResult:
+    fact: str
+    decisions: int
+    agreements: list[str] = field(default_factory=list)
+    tasks: list[str] = field(default_factory=list)
+    payments: int = 0
+
+
+@dataclass
+class ReconsiderResult:
+    entity: str
+    decision: str
+    gate_reopened: bool
+
+
+@dataclass
+class SuspectResult:
+    suspect: list[str] = field(default_factory=list)
+
+
+@server.tool(structured_output=True)
+def remember(text: str, category: str = "preference") -> RememberResult:
     """Store a durable fact. Categories: preference, lesson, identity."""
     store = _store()
     try:
@@ -56,144 +153,159 @@ def remember(text: str, category: str = "preference") -> str:
             evaluated={"category": category, "name": text},
             acted=[f"remembered {category} {text[:60]}"],
         )
-        return f"remembered {category}: {text}"
+        return RememberResult(category=category, name=text)
     finally:
         store.close()
 
 
-@server.tool()
-def ask(question: str) -> str:
+@server.tool(structured_output=True)
+def ask(question: str) -> AskResult:
     """Ask the agent. It answers only from memory and says when it does not know."""
     store = _store()
     try:
         answer = RecallEngine(store).ask(question)
-        return answer.answer
+        return AskResult(
+            question=question,
+            answer=answer.answer,
+            found=answer.found_anything,
+            sources=list(answer.sources),
+        )
     finally:
         store.close()
 
 
-@server.tool()
-def learn_lesson(text: str, severity: str = "medium") -> str:
+@server.tool(structured_output=True)
+def learn_lesson(text: str, severity: str = "medium") -> LessonResult:
     """Record a failure as a lesson. Severity: low, medium, high."""
     store = _store()
     try:
         learn(store, text, severity=severity)
-        return f"learned ({severity}): {text}"
+        return LessonResult(severity=severity, text=text)
     finally:
         store.close()
 
 
-@server.tool()
-def task(objective: str) -> str:
+@server.tool(structured_output=True)
+def task(objective: str) -> TaskResult:
     """Create a task that survives restarts."""
     store = _store()
     try:
-        Task(store, _slug(objective), objective=objective)
-        return f"task queued: {objective}"
+        name = _slug(objective)
+        Task(store, name, objective=objective)
+        return TaskResult(name=name, objective=objective)
     finally:
         store.close()
 
 
-@server.tool()
-def resume() -> str:
+@server.tool(structured_output=True)
+def resume() -> ResumeResult:
     """List unfinished work, work first."""
     store = _store()
     try:
-        records = unfinished(store)
-        if not records:
-            return "nothing unfinished"
-        lines = [
-            f"- {record.get('name')} ({record.get('status')}): "
-            f"{(record.get('body') or {}).get('objective', '')}"
-            for record in records
+        items = [
+            {
+                "name": str(record.get("name")),
+                "status": str(record.get("status")),
+                "objective": str((record.get("body") or {}).get("objective", "")),
+            }
+            for record in unfinished(store)
         ]
-        return "\n".join(lines)
+        return ResumeResult(unfinished=items)
     finally:
         store.close()
 
 
-@server.tool()
-def recap_day() -> str:
+@server.tool(structured_output=True)
+def recap_day() -> RecapResult:
     """Summarize the journal and standing agreements."""
     store = _store()
     try:
-        return recap(store).text
+        return RecapResult(text=recap(store).text)
     finally:
         store.close()
 
 
-@server.tool()
-def replay(subject: str) -> str:
+@server.tool(structured_output=True)
+def replay(subject: str) -> ReplayResult:
     """Show the causal chain for a subject, oldest first."""
     store = _store()
     try:
-        return replay_memory(store, subject).text
+        return ReplayResult(subject=subject, text=replay_memory(store, subject).text)
     finally:
         store.close()
 
 
-@server.tool()
-def revise(category: str, name: str, new_value: str, reason: str = "") -> str:
+@server.tool(structured_output=True)
+def revise(
+    category: str, name: str, new_value: str, reason: str = ""
+) -> ReviseResult:
     """Correct a fact, then taint everything that depended on it."""
     store = _store()
     try:
         result = revise_memory(
             store, category, name, new_value, reason=reason or None
         )
-        lines = [
-            f"revised {result['fact']}: {result['from']} -> {result['to']}",
-            f"decisions affected: {result['decisions_affected']}",
-        ]
-        for item in result["newly_suspect"]:
-            lines.append(f"suspect: {item}")
-        if not result["newly_suspect"]:
-            lines.append("nothing depended on this fact")
-        return "\n".join(lines)
-    finally:
-        store.close()
-
-
-@server.tool()
-def blast(category: str, name: str) -> str:
-    """Report the blast radius of a fact without changing anything."""
-    store = _store()
-    try:
-        radius = blast_radius_memory(store, f"{category}:{name}")
-        return (
-            f"blast radius of {radius['fact']}: {radius['decisions']} "
-            f"decisions, {radius['agreements']} agreements, "
-            f"{radius['tasks']} tasks, {radius['payments']} payments"
+        return ReviseResult(
+            revision_id=str(result["revision_id"]),
+            fact=str(result["fact"]),
+            old=str(result["from"]),
+            new=str(result["to"]),
+            decisions_affected=int(result["decisions_affected"]),
+            payments_affected=int(result["payments_affected"]),
+            newly_suspect=list(result["newly_suspect"]),
         )
     finally:
         store.close()
 
 
-@server.tool()
-def reconsider(category: str, name: str, decision: str, reason: str = "") -> str:
+@server.tool(structured_output=True)
+def blast(category: str, name: str) -> BlastResult:
+    """Report the blast radius of a fact without changing anything."""
+    store = _store()
+    try:
+        radius = blast_radius_memory(store, f"{category}:{name}")
+        return BlastResult(
+            fact=str(radius["fact"]),
+            decisions=int(radius["decisions"]),
+            agreements=list(radius["agreements"]),
+            tasks=list(radius["tasks"]),
+            payments=int(radius["payments"]),
+        )
+    finally:
+        store.close()
+
+
+@server.tool(structured_output=True)
+def reconsider(
+    category: str, name: str, decision: str, reason: str = ""
+) -> ReconsiderResult:
     """Review a suspect entity. decision: valid or invalid."""
     store = _store()
     try:
         result = reconsider_memory(
             store, category, name, decision, reason=reason or None
         )
-        state = "gate reopened" if result["reopened"] else "still suspect"
-        return f"reconsidered {category} {name}: {decision}, {state}"
+        return ReconsiderResult(
+            entity=f"{category}:{name}",
+            decision=decision,
+            gate_reopened=bool(result["reopened"]),
+        )
     finally:
         store.close()
 
 
-@server.tool()
-def suspect() -> str:
+@server.tool(structured_output=True)
+def suspect() -> SuspectResult:
     """List entities currently blocked by a revised memory."""
     store = _store()
     try:
-        lines = []
+        blocked = []
         for category in ("agreement", "task"):
             for record in store.list_durable(category):
                 name = record.get("name")
                 if is_suspect_memory(store, category, name):
-                    lines.append(f"- {category} {name}")
-        return "\n".join(lines) if lines else "(nothing suspect)"
+                    blocked.append(f"{category} {name}")
+        return SuspectResult(suspect=blocked)
     finally:
         store.close()
 
