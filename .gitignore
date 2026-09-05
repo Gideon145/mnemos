@@ -24,3 +24,6 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+
+# Evidence db files
+docs/evidence/*.db
