@@ -159,16 +159,60 @@ form.addEventListener("submit", async (e) => {
   input.value = "";
   addMsg("user", question);
   try {
-    if (!sessionId) {
-      await connect();
-      setStatus(true);
-    }
-    const out = await callTool("ask", { question });
-    addMsg("bot", out.answer || out.text || "(empty)", "ask");
+    const res = await fetch(MCP_URL.replace(/\/mcp$/, "/chat"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: question }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "chat failed");
+    addMsg("bot", data.answer || "(empty)", "mnemos · memory grounded");
   } catch (err) {
     addMsg("bot", "Error: " + err.message, "failed");
   }
 });
+
+// Copy buttons in the agent panel.
+document.querySelectorAll(".copy-btn").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(btn.dataset.copy || "");
+      btn.textContent = "Copied";
+      btn.classList.add("copied");
+      setTimeout(() => {
+        btn.textContent = "Copy";
+        btn.classList.remove("copied");
+      }, 1600);
+    } catch {
+      btn.textContent = "Blocked";
+    }
+  });
+});
+
+// Scroll reveal.
+const observer = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("in");
+        observer.unobserve(entry.target);
+      }
+    });
+  },
+  { threshold: 0.12 }
+);
+document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+
+// Waitlist stub.
+const waitlist = document.getElementById("waitlist-form");
+if (waitlist) {
+  waitlist.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const note = document.getElementById("waitlist-note");
+    note.textContent = "Noted. Mnemos will not forget you.";
+    waitlist.reset();
+  });
+}
 
 // Warm up the connection on load.
 connect()
