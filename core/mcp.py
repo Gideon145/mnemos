@@ -342,31 +342,43 @@ _FACT_PATTERNS = (
 
 
 def _extract_facts(text: str) -> list[tuple[str, str]]:
-    """Pull stated facts out of a chat message, deterministically."""
+    """Pull every stated fact out of a chat message, deterministically.
+
+    Scans the whole message, so compound sentences like
+    "how are u my name is john and i live in england" yield every fact.
+    """
     facts: list[tuple[str, str]] = []
-    lowered = text.strip().lower()
-    match = re.match(r"(?:my name is|call me)\s+(.+)", lowered)
-    if match:
-        raw = match.group(1).strip()
-        if raw and len(raw.split()) <= 12:
-            return [("identity", raw)]
-    match = re.match(r"i like\s+(.+)", lowered)
-    if match:
-        raw = match.group(1).strip()
-        if raw and len(raw.split()) <= 12:
-            return [("preference", raw)]
-    match = re.match(r"my\s+(.+?)\s+is\s+(.+)", lowered)
-    if match:
+    lowered = text.lower()
+    seen: set[tuple[str, str]] = set()
+
+    def add(category: str, raw: str) -> None:
+        raw = raw.strip().rstrip(".,")
+        if not raw or len(raw.split()) > 12:
+            return
+        if (category, raw) not in seen:
+            seen.add((category, raw))
+            facts.append((category, raw))
+
+    boundary = r"(?=\s+and\s|\s+but\s|[,.]|$)"
+    for match in re.finditer(r"my name is\s+([a-z][a-z ]*?)" + boundary, lowered):
+        add("identity", match.group(1))
+    for match in re.finditer(r"call me\s+([a-z][a-z ]*?)" + boundary, lowered):
+        add("identity", match.group(1))
+    for match in re.finditer(r"i live in\s+([a-z][a-z ]*?)" + boundary, lowered):
+        add("preference", "i live in " + match.group(1))
+    for match in re.finditer(r"i like\s+([a-z0-9 ,.$]+?)" + boundary, lowered):
+        add("preference", "i like " + match.group(1))
+    for match in re.finditer(
+        r"my\s+([a-z][a-z ]*?)\s+is\s+([a-z0-9 .,$]+?)" + boundary, lowered
+    ):
         subject = match.group(1).strip()
-        value = match.group(2).strip()
-        raw = f"{subject} is {value}"
-        if len(raw.split()) <= 12:
-            return [("preference", raw)]
-    match = re.match(r"i am\s+(.+)", lowered)
-    if match:
-        raw = match.group(1).strip()
-        if raw and raw.lower() not in ("fine", "ok", "okay", "good", "here") and len(raw.split()) <= 12:
-            return [("preference", raw)]
+        if subject != "name":
+            add("preference", f"{subject} is {match.group(2)}")
+    whole = re.match(r"i am\s+(.+)", lowered.strip())
+    if whole:
+        raw = whole.group(1).strip()
+        if raw not in ("fine", "ok", "okay", "good", "here"):
+            add("preference", raw)
     return facts
 
 
