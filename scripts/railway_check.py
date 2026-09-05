@@ -51,7 +51,16 @@ for attempt in range(30):
         {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}},
         session=session,
     )
-    data = json.loads(raw2.splitlines()[0][5:])
+    data = None
+    for line in raw2.splitlines():
+        line = line.strip()
+        if line.startswith("data:"):
+            line = line[5:].strip()
+        if line.startswith("{"):
+            data = json.loads(line)
+            break
+    if data is None:
+        data = json.loads(raw2)
     tools = [t["name"] for t in data["result"]["tools"]]
     print("TOOLS:", ", ".join(tools))
     print("RAILWAY MCP LIVE:", f"https://{HOST}/mcp")
