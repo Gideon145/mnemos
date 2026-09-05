@@ -88,3 +88,5 @@ The agent's corrections now govern its actions: `mnemos revise`.
   (arXiv:2608.10502 does post-failure computation recovery, not gating)
 
 84 tests passing.
+
+Public post: https://x.com/mnemos_agent/status/2096104331594399947
