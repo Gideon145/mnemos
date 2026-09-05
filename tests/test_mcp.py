@@ -122,3 +122,16 @@ def test_blast_reports_radius():
 
     out = mcp.blast("preference", "rate")
     assert out.agreements == ["fencing"]
+
+
+def test_reset_wipes_all_durable_entities():
+    mcp.remember("I like short direct answers", category="preference")
+    mcp.remember("my contractor rate is 40 per hour", category="preference")
+    mcp.task("sweep the floor")
+
+    result = mcp.reset()
+    assert result.cleared == 3
+
+    ask = mcp.ask("what do you know about me?")
+    assert ask.found is False
+    assert mcp.resume().unfinished == []

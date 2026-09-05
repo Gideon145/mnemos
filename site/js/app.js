@@ -246,7 +246,15 @@ if (waitlist) {
   });
 }
 
-// Warm up the connection on load.
+// Warm up the connection on load, then reset so every visitor starts
+// with a fresh memory instead of inheriting previous visitors.
 connect()
-  .then(() => setStatus(true))
+  .then(async () => {
+    setStatus(true);
+    try {
+      await callTool("reset", {});
+    } catch {
+      /* reset is best effort */
+    }
+  })
   .catch(() => setStatus(false));
