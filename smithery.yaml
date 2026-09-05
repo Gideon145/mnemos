@@ -1,0 +1,17 @@
+# Smithery deployment manifest for Mnemos
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      MNEMOS_DB:
+        type: string
+        description: "Path to the durable memory database (defaults to a container-local store)"
+        default: "/data/memory.db"
+  commandFunction:
+    |-
+    (config) => ({
+      command: 'mnemos',
+      args: ['mcp'],
+      env: { MNEMOS_DB: config.MNEMOS_DB || '/data/memory.db' }
+    })
