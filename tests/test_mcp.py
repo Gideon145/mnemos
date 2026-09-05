@@ -21,38 +21,42 @@ def scoped_db(tmp_path, monkeypatch):
 
 def test_remember_then_ask_roundtrip():
     out = mcp.remember("contractor rate is 40", category="preference")
-    assert "remembered" in out
+    assert out.category == "preference"
     answer = mcp.ask("what is the contractor rate?")
-    assert "40" in answer
+    assert "40" in answer.answer
+    assert answer.found is True
 
 
 def test_ask_with_empty_memory_is_honest():
     answer = mcp.ask("what is the contractor rate?")
-    assert answer  # says it does not know rather than fabricating
+    assert answer.answer  # says it does not know rather than fabricating
+    assert answer.found is False
 
 
 def test_learn_lesson_surfaces_severity():
     out = mcp.learn_lesson("prepaying contractors burns money", severity="high")
-    assert "high" in out
+    assert out.severity == "high"
 
 
 def test_task_and_resume_roundtrip():
     mcp.task("sweep the floor")
     mcp.task("paint the fence")
     out = mcp.resume()
-    assert "sweep" in out and "paint" in out
+    names = [item["name"] for item in out.unfinished]
+    assert "sweep_the_floor" in names
+    assert "paint_the_fence" in names
 
 
 def test_resume_with_nothing_reports_empty():
-    assert mcp.resume() == "nothing unfinished"
+    assert mcp.resume().unfinished == []
 
 
 def test_recap_and_replay_roundtrip():
     mcp.remember("ship on fridays", category="preference")
-    recap_text = mcp.recap_day()
-    assert recap_text
-    replay_text = mcp.replay("fridays")
-    assert replay_text
+    assert mcp.recap_day().text
+    replay_result = mcp.replay("fridays")
+    assert replay_result.text
+    assert replay_result.subject == "fridays"
 
 
 def test_revise_marks_dependents_suspect():
@@ -66,11 +70,12 @@ def test_revise_marks_dependents_suspect():
         store.close()
 
     out = mcp.revise("preference", "rate", "60", reason="corrected")
-    assert "40" in out and "60" in out
-    assert "suspect: agreement:fencing" in out
+    assert out.old == "40" and out.new == "60"
+    assert "agreement:fencing" in out.newly_suspect
+    assert out.revision_id
 
     suspect_list = mcp.suspect()
-    assert "agreement fencing" in suspect_list
+    assert "agreement fencing" in suspect_list.suspect
 
 
 def test_reconsider_reopens_and_clears():
@@ -85,8 +90,8 @@ def test_reconsider_reopens_and_clears():
 
     mcp.revise("preference", "rate", "60")
     out = mcp.reconsider("agreement", "fencing", "valid", reason="fixed price")
-    assert "gate reopened" in out
-    assert mcp.suspect() == "(nothing suspect)"
+    assert out.gate_reopened is True
+    assert mcp.suspect().suspect == []
 
 
 def test_reconsider_invalid_keeps_suspect():
@@ -101,8 +106,8 @@ def test_reconsider_invalid_keeps_suspect():
 
     mcp.revise("preference", "rate", "60")
     out = mcp.reconsider("agreement", "fencing", "invalid")
-    assert "still suspect" in out
-    assert "agreement fencing" in mcp.suspect()
+    assert out.gate_reopened is False
+    assert "agreement fencing" in mcp.suspect().suspect
 
 
 def test_blast_reports_radius():
@@ -116,4 +121,4 @@ def test_blast_reports_radius():
         store.close()
 
     out = mcp.blast("preference", "rate")
-    assert "agreements" in out
+    assert out.agreements == ["fencing"]
