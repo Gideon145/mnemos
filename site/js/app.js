@@ -90,6 +90,26 @@ function addMsg(role, text, meta) {
   }
   chat.appendChild(wrap);
   chat.scrollTop = chat.scrollHeight;
+  return wrap;
+}
+
+// Typing indicator with pooling dots, like Claude.
+let typingEl = null;
+function showTyping() {
+  if (typingEl) return;
+  typingEl = document.createElement("div");
+  typingEl.className = "msg bot typing";
+  typingEl.innerHTML =
+    '<div class="msg-name">MNEMOS</div>' +
+    '<div class="msg-body"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
+  chat.appendChild(typingEl);
+  chat.scrollTop = chat.scrollHeight;
+}
+function hideTyping() {
+  if (typingEl) {
+    typingEl.remove();
+    typingEl = null;
+  }
 }
 
 function renderStructured(data) {
@@ -117,31 +137,40 @@ async function runAction(action) {
     }
     if (action === "teach") {
       addMsg("user", "Teach me two facts.");
+      showTyping();
       await callTool("remember", { text: "I like short direct answers", category: "preference" });
       await callTool("remember", { text: "my contractor rate is 40 per hour", category: "preference" });
+      hideTyping();
       addMsg("bot", "Stored both facts.\n\npreference: I like short direct answers\npreference: my contractor rate is 40 per hour", "remember x2");
     } else if (action === "ask") {
       addMsg("user", "What do you know about me?");
+      showTyping();
       const out = await callTool("ask", { question: "what do you know about me?" });
+      hideTyping();
       addMsg("bot", out.answer || out.text || "(empty)", "ask · found: " + (out.found !== undefined ? out.found : "?"));
     } else if (action === "revise") {
       addMsg("user", "Revise my contractor rate to 60 per hour.");
+      showTyping();
       const out = await callTool("revise", {
         category: "preference",
         name: "my contractor rate is 40 per hour",
         new_value: "60 per hour",
         reason: "renotiated",
       });
+      hideTyping();
       addMsg("bot", renderStructured(out), "revise");
     } else if (action === "blast") {
       addMsg("user", "What is the blast radius of my contractor rate?");
+      showTyping();
       const out = await callTool("blast", {
         category: "preference",
         name: "my contractor rate is 40 per hour",
       });
+      hideTyping();
       addMsg("bot", renderStructured(out), "blast");
     }
   } catch (err) {
+    hideTyping();
     addMsg("bot", "Error: " + err.message, "failed");
   } finally {
     chips.forEach((c) => (c.disabled = false));
@@ -158,6 +187,7 @@ form.addEventListener("submit", async (e) => {
   if (!question) return;
   input.value = "";
   addMsg("user", question);
+  showTyping();
   try {
     const res = await fetch(MCP_URL.replace(/\/mcp$/, "/chat"), {
       method: "POST",
@@ -165,9 +195,11 @@ form.addEventListener("submit", async (e) => {
       body: JSON.stringify({ message: question }),
     });
     const data = await res.json();
+    hideTyping();
     if (!res.ok) throw new Error(data.error || "chat failed");
     addMsg("bot", data.answer || "(empty)", "mnemos · memory grounded");
   } catch (err) {
+    hideTyping();
     addMsg("bot", "Error: " + err.message, "failed");
   }
 });
