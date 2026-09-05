@@ -10,6 +10,14 @@ const status = document.getElementById("pg-status");
 
 let sessionId = null;
 let nextId = 1;
+let ready = false;
+
+function setReady(value) {
+  ready = value;
+  input.disabled = !value;
+  form.querySelector("button").disabled = !value;
+  document.querySelectorAll(".chip").forEach((c) => (c.disabled = !value));
+}
 
 function setStatus(online) {
   status.classList.toggle("online", online);
@@ -188,16 +196,20 @@ async function runAction(action) {
     hideTyping();
     addMsg("bot", "Error: " + err.message, "failed");
   } finally {
-    chips.forEach((c) => (c.disabled = false));
+    if (ready) chips.forEach((c) => (c.disabled = false));
   }
 }
 
 document.querySelectorAll(".chip").forEach((chip) => {
-  chip.addEventListener("click", () => runAction(chip.dataset.action));
+  chip.addEventListener("click", () => {
+    if (!ready) return;
+    runAction(chip.dataset.action);
+  });
 });
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
+  if (!ready) return;
   const question = input.value.trim();
   if (!question) return;
   input.value = "";
@@ -262,7 +274,9 @@ if (waitlist) {
 }
 
 // Warm up the connection on load, then reset so every visitor starts
-// with a fresh memory instead of inheriting previous visitors.
+// with a fresh memory instead of inheriting previous visitors. Input
+// stays disabled until the wipe finishes so a fast user cannot race it.
+setReady(false);
 connect()
   .then(async () => {
     setStatus(true);
@@ -271,5 +285,9 @@ connect()
     } catch {
       /* reset is best effort */
     }
+    setReady(true);
   })
-  .catch(() => setStatus(false));
+  .catch(() => {
+    setStatus(false);
+    setReady(true);
+  });
