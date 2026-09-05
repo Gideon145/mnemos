@@ -141,9 +141,18 @@ def test_extract_facts_from_chat_messages():
     assert mcp._extract_facts("my name is john") == [("identity", "john")]
     assert mcp._extract_facts("call me john") == [("identity", "john")]
     assert mcp._extract_facts("i like short direct answers") == [
-        ("preference", "short direct answers")
+        ("preference", "i like short direct answers")
     ]
     assert mcp._extract_facts("my contractor rate is 40 per hour") == [
         ("preference", "contractor rate is 40 per hour")
     ]
     assert mcp._extract_facts("how are you?") == []
+
+
+def test_extract_facts_from_compound_messages():
+    facts = mcp._extract_facts("how are u my name is john and i live in england")
+    assert ("identity", "john") in facts
+    assert ("preference", "i live in england") in facts
+    facts2 = mcp._extract_facts("my name is john, i like cats and dogs")
+    assert ("identity", "john") in facts2
+    assert any("i like" in value for _, value in facts2)
