@@ -333,6 +333,28 @@ def reset() -> ResetResult:
         store.close()
 
 
+_FACT_PATTERNS = (
+    (r"(?:my name is|call me)\s+(.+)", "identity"),
+    (r"i like\s+(.+)", "preference"),
+    (r"my\s+(.+?)\s+is\s+(.+)", "preference"),
+    (r"i am\s+(.+)", "preference"),
+)
+
+
+def _extract_facts(text: str) -> list[tuple[str, str]]:
+    """Pull stated facts out of a chat message, deterministically."""
+    facts: list[tuple[str, str]] = []
+    for pattern, category in _FACT_PATTERNS:
+        match = re.match(pattern, text.strip(), re.IGNORECASE)
+        if match:
+            raw = " ".join(match.groups()).strip()
+            if len(raw.split()) > 12 or not raw:
+                continue
+            facts.append((category, raw))
+            break
+    return facts
+
+
 def _chat_answer(user_text: str) -> str:
     """Answer conversationally, grounded in whatever memory currently holds."""
     api_key = os.environ.get("VIRTUALS_API_KEY")
@@ -341,6 +363,20 @@ def _chat_answer(user_text: str) -> str:
         raise RuntimeError(
             "the hosted chat needs VIRTUALS_API_KEY and VIRTUALS_COMPUTE_URL"
         )
+
+    # Facts the user states get stored before the model answers, so the
+    # memory the answer is grounded in already contains them.
+    for category, value in _extract_facts(user_text):
+        store = _store()
+        try:
+            store.remember_durable(category, _slug(value), {"value": value})
+            store.record_event(
+                evaluated={"source": "playground chat"},
+                acted=[f"remembered {category} {value[:60]}"],
+            )
+        finally:
+            store.close()
+
     store = _store()
     try:
         memory = RecallEngine(store).ask("what do you know about me?").answer
@@ -354,14 +390,13 @@ def _chat_answer(user_text: str) -> str:
     system = (
         "You are Mnemos, a memory assistant. A durable memory store, owned by "
         "the user and stored on Sibyl, is attached to this chat. Below is its "
-        "current content.\n\n"
+        "current content. Facts the user states are stored automatically.\n\n"
         f"MEMORY:\n{memory}\n\n"
         "Rules: ground answers in the memory above when the user asks about "
-        "it. If the user tells you a fact about themselves, acknowledge it "
-        "and suggest they store it with the remember tool. Never present "
-        "invented content as memory. Never use em dashes or en dashes, "
-        "use commas or periods instead. Keep answers to 1 to 3 sentences, "
-        "warm but not sycophantic."
+        "it. Acknowledge newly stated facts naturally, no need to instruct "
+        "the user to do anything. Never present invented content as memory. "
+        "Never use em dashes or en dashes, use commas or periods instead. "
+        "Keep answers to 1 to 3 sentences, warm but not sycophantic."
     )
     payload: dict[str, Any] = {
         "messages": [
