@@ -30,6 +30,44 @@ take it anywhere.
   </a>
 </p>
 
+## Verified live
+
+Both partner stacks ran on the final code, on real rails. Full captures and
+reproduction steps: [docs/VERIFICATION.md](docs/VERIFICATION.md).
+
+| Stack | What ran | Live proof |
+|---|---|---|
+| Base | The payment gate read a remembered agreement, refused it while the agreement was not delivered, then executed it once delivered | [mainnet tx `0x1ed5b2...46d194`](https://basescan.org/tx/0x1ed5b2674123e70a4de87ca9ceebad38f961fc6612c2206bb1456356ae46d194), Sep 5, status 1 |
+| Virtuals | ACP compute dispatch from a remembered console agent id on `compute.virtuals.io/v1` | `anthropic/claude-fable-5`, response `gen-1788586150-...`, 256 tokens, $0.01104 billed |
+
+## Table of Contents
+
+- [Verified live](#verified-live)
+- [Why](#why)
+- [What memory improves](#what-memory-improves)
+- [What it does](#what-it-does)
+- [Use Mnemos from any agent (MCP)](#use-mnemos-from-any-agent-mcp)
+- [Install](#install)
+- [The load-bearing map](#the-load-bearing-map)
+- [The proof in one take](#the-proof-in-one-take)
+- [Architecture](#architecture)
+- [Honest status](#honest-status)
+- [License](#license)
+
+### Supplemental docs
+
+- ⚖️ [Judge Guide](docs/JUDGE_GUIDE.md): 5-minute review, every claim mapped to file, test, and live artifact
+- ✅ [Verification](docs/VERIFICATION.md): Base mainnet tx + Virtuals ACP proof, reproducible
+- 🏛️ [Architecture](docs/ARCHITECTURE.md): full system design and data flow
+- 🧠 [Memory Model](docs/MEMORY_MODEL.md): entities, journals, gates
+- 📈 [PMF](docs/PMF.md): why Mnemos has to exist
+- 📐 [Build Plan](docs/PLAN.md): the plan, day by day
+- 📆 [Build Phases](docs/PHASES.md): phase-by-phase breakdown
+- 🧾 [Build Log](docs/BUILD_LOG.md): what was built and when
+- 🎬 [Demo Script](docs/DEMO_SCRIPT.md): 2 to 5 minute, one unedited take
+- 📤 [Public Submission](docs/PUBLIC_SUBMISSION.md): submission status
+- ⏮️ [Prior Work](docs/PRIOR_WORK.md): prior work declaration
+
 ## Why
 
 Old computers had almost no RAM, and memory is what held them back,
@@ -82,8 +120,8 @@ Memory is not the feature. What memory changes is the feature.
 
 ## Use Mnemos from any agent (MCP)
 
-`mnemos mcp` serves the same 11 tools (remember, ask, lessons, tasks, replay,
-revise, blast, reconsider, suspect, and more) to any MCP client over stdio.
+`mnemos mcp` serves the same 12 tools (remember, ask, lessons, tasks, replay,
+revise, blast, reconsider, suspect, reset, and more) to any MCP client over stdio.
 
 ```bash
 pip install '.[mcp]'
@@ -190,7 +228,7 @@ you / any MCP client
 
 | Area | Status | Proof |
 |---|---|---|
-| Memory core, recall, gate, lessons, tasks, revision | shipped, 110 tests green | `pytest` |
+| Memory core, recall, gate, lessons, tasks, revision | shipped, 111 tests green | `pytest` |
 | Base mainnet payment from a gated decision | verified live | `docs/VERIFICATION.md` |
 | Virtuals ACP dispatch | verified live, billed | `docs/VERIFICATION.md` |
 | Hosted MCP endpoint, Smithery, Railway | live | badges above |
@@ -201,18 +239,6 @@ you / any MCP client
 | Demo video | pending | script in `docs/DEMO_SCRIPT.md` |
 | Semantic/vector search | deliberately not shipped | recall is FTS + deterministic fallback |
 | Production auth on the hosted endpoint | deliberately not claimed | demo surface |
-
-## Docs
-
-- [Judge guide](docs/JUDGE_GUIDE.md) (claim -> file:line, test, live artifact)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Memory model](docs/MEMORY_MODEL.md)
-- [Build plan](docs/PLAN.md)
-- [Build log](docs/BUILD_LOG.md)
-- [Demo script](docs/DEMO_SCRIPT.md)
-- [Verification](docs/VERIFICATION.md)
-- [Public submission](docs/PUBLIC_SUBMISSION.md)
-- [Prior work declaration](docs/PRIOR_WORK.md)
 
 ## License
 
