@@ -17,9 +17,14 @@ from mcp.server.fastmcp import FastMCP
 
 from .agent import RecallEngine
 from .agent.recap import recap
-from .agent.replay import replay
+from .agent.replay import replay as replay_memory
 from .memory.lessons import learn
-from .memory.revision import blast_radius, is_suspect, reconsider, revise
+from .memory.revision import (
+    blast_radius as blast_radius_memory,
+    is_suspect as is_suspect_memory,
+    reconsider as reconsider_memory,
+    revise as revise_memory,
+)
 from .memory.store import MemoryStore
 from .memory.tasks import Task, unfinished
 
@@ -120,7 +125,7 @@ def replay(subject: str) -> str:
     """Show the causal chain for a subject, oldest first."""
     store = _store()
     try:
-        return replay(store, subject).text
+        return replay_memory(store, subject).text
     finally:
         store.close()
 
@@ -130,7 +135,7 @@ def revise(category: str, name: str, new_value: str, reason: str = "") -> str:
     """Correct a fact, then taint everything that depended on it."""
     store = _store()
     try:
-        result = revise(
+        result = revise_memory(
             store, category, name, new_value, reason=reason or None
         )
         lines = [
@@ -151,7 +156,7 @@ def blast(category: str, name: str) -> str:
     """Report the blast radius of a fact without changing anything."""
     store = _store()
     try:
-        radius = blast_radius(store, f"{category}:{name}")
+        radius = blast_radius_memory(store, f"{category}:{name}")
         return (
             f"blast radius of {radius['fact']}: {radius['decisions']} "
             f"decisions, {radius['agreements']} agreements, "
@@ -166,7 +171,7 @@ def reconsider(category: str, name: str, decision: str, reason: str = "") -> str
     """Review a suspect entity. decision: valid or invalid."""
     store = _store()
     try:
-        result = reconsider(
+        result = reconsider_memory(
             store, category, name, decision, reason=reason or None
         )
         state = "gate reopened" if result["reopened"] else "still suspect"
@@ -184,7 +189,7 @@ def suspect() -> str:
         for category in ("agreement", "task"):
             for record in store.list_durable(category):
                 name = record.get("name")
-                if is_suspect(store, category, name):
+                if is_suspect_memory(store, category, name):
                     lines.append(f"- {category} {name}")
         return "\n".join(lines) if lines else "(nothing suspect)"
     finally:
