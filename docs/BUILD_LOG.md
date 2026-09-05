@@ -90,3 +90,19 @@ The agent's corrections now govern its actions: `mnemos revise`.
 84 tests passing.
 
 Public post: https://x.com/mnemos_agent/status/2096104331594399947
+
+### Day 5 late: hosted MCP, verified by a real client
+
+- all 11 commands exposed as MCP tools with typed structured outputs
+- `mnemos mcp` (stdio) and `mnemos mcp --http` (streamable HTTP)
+- deployed live: Railway https://mnemos-production-2572.up.railway.app/mcp
+  and Smithery https://smithery.ai/servers/mnemos/mnemos
+- persistent /data volume on Railway so hosted memory survives redeploys
+- Claude connected to the live endpoint and found a real bug: asking
+  "what do you know about me" answered nothing because the word "you"
+  hijacked recall into the identity category. Fixed: whole-memory
+  questions now list every durable entity with sources, and identity
+  triggers are narrowed to who/name/identity
+- regression tests added for both behaviors
+
+100 tests passing.
