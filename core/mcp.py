@@ -344,14 +344,29 @@ _FACT_PATTERNS = (
 def _extract_facts(text: str) -> list[tuple[str, str]]:
     """Pull stated facts out of a chat message, deterministically."""
     facts: list[tuple[str, str]] = []
-    for pattern, category in _FACT_PATTERNS:
-        match = re.match(pattern, text.strip(), re.IGNORECASE)
-        if match:
-            raw = " ".join(match.groups()).strip()
-            if len(raw.split()) > 12 or not raw:
-                continue
-            facts.append((category, raw))
-            break
+    lowered = text.strip().lower()
+    match = re.match(r"(?:my name is|call me)\s+(.+)", lowered)
+    if match:
+        raw = match.group(1).strip()
+        if raw and len(raw.split()) <= 12:
+            return [("identity", raw)]
+    match = re.match(r"i like\s+(.+)", lowered)
+    if match:
+        raw = match.group(1).strip()
+        if raw and len(raw.split()) <= 12:
+            return [("preference", raw)]
+    match = re.match(r"my\s+(.+?)\s+is\s+(.+)", lowered)
+    if match:
+        subject = match.group(1).strip()
+        value = match.group(2).strip()
+        raw = f"{subject} is {value}"
+        if len(raw.split()) <= 12:
+            return [("preference", raw)]
+    match = re.match(r"i am\s+(.+)", lowered)
+    if match:
+        raw = match.group(1).strip()
+        if raw and raw.lower() not in ("fine", "ok", "okay", "good", "here") and len(raw.split()) <= 12:
+            return [("preference", raw)]
     return facts
 
 
