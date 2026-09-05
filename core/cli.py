@@ -27,6 +27,7 @@ from .memory.reflection import pending as pending_proposals
 from .memory.reflection import reflect as run_reflection
 from .memory.reflection import reject as reject_proposal
 from .memory.revision import blast_radius, is_suspect, reconsider, revise, suspect_reasons
+from .memory.seal import seal_journal as seal_journal_command
 from .memory.store import MemoryStore
 
 DEFAULT_DB = str(Path.home() / ".mnemos" / "memory.db")
@@ -140,6 +141,10 @@ def build_parser() -> argparse.ArgumentParser:
     reconsider_cmd.add_argument("--reason", default=None)
 
     suspect_cmd = sub.add_parser("suspect", help="list suspect entities")
+
+    seal_cmd = sub.add_parser(
+        "seal", help="fold the journal into a tamper-evident chain head"
+    )
 
     mcp_cmd = sub.add_parser(
         "mcp", help="run the MCP server so any MCP client gets the memory tools"
@@ -441,6 +446,13 @@ def main(argv: list[str] | None = None) -> int:
                         )
             if not found:
                 print("(nothing suspect)")
+            return 0
+
+        if args.command == "seal":
+            result = seal_journal_command(store)
+            print(
+                f"sealed {result['count']} journal events, head {result['head'][:16]}"
+            )
             return 0
 
         if args.command == "mcp":

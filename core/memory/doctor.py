@@ -19,6 +19,7 @@ from pathlib import Path
 
 from .agreement import Agreement
 from .gate import evaluate_payment
+from .seal import seal_journal, verify_journal
 from .store import MemoryStore
 
 
@@ -55,6 +56,12 @@ def run_doctor() -> DoctorReport:
         checks.append(
             ("gate opens on a remembered agreement", before.allowed, before.reason)
         )
+
+        seal_journal(store)
+        sealed = verify_journal(store)
+        checks.append(
+            ("journal seal verifies", sealed["ok"], sealed.get("detail", "sealed"))
+        )
         store.close()
 
         for path in glob.glob(str(db) + "*"):
@@ -71,6 +78,14 @@ def run_doctor() -> DoctorReport:
         after = evaluate_payment(fresh, "contractor", 40)
         checks.append(
             ("deletion closes the gate", not after.allowed, after.reason)
+        )
+        broken = verify_journal(fresh)
+        checks.append(
+            (
+                "deletion breaks the journal seal",
+                not broken["ok"],
+                broken["detail"],
+            )
         )
         fresh.close()
 
