@@ -82,11 +82,6 @@ reproduction steps: [docs/VERIFICATION.md](docs/VERIFICATION.md).
 - 🏛️ [Architecture](docs/ARCHITECTURE.md): full system design and data flow
 - 🧠 [Memory Model](docs/MEMORY_MODEL.md): entities, journals, gates
 - 📈 [PMF](docs/PMF.md): why Mnemos has to exist
-- 📐 [Build Plan](docs/PLAN.md): the plan, day by day
-- 📆 [Build Phases](docs/PHASES.md): phase-by-phase breakdown
-- 🧾 [Build Log](docs/BUILD_LOG.md): what was built and when
-- 🎬 [Demo Script](docs/DEMO_SCRIPT.md): 2 to 5 minute, one unedited take
-- 📤 [Public Submission](docs/PUBLIC_SUBMISSION.md): submission status
 - ⏮️ [Prior Work](docs/PRIOR_WORK.md): prior work declaration
 
 ## Why
