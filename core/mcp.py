@@ -633,15 +633,15 @@ def _chat_answer(user_text: str) -> str:
     # state nothing, so nothing is extracted from them.
     if not _is_question(user_text):
         for category, value in _extract_facts(user_text):
-        store = _store()
-        try:
-            store.remember_durable(category, _slug(value), {"value": value})
-            store.record_event(
-                evaluated={"source": "playground chat"},
-                acted=[f"remembered {category} {value[:60]}"],
-            )
-        finally:
-            store.close()
+            store = _store()
+            try:
+                store.remember_durable(category, _slug(value), {"value": value})
+                store.record_event(
+                    evaluated={"source": "playground chat"},
+                    acted=[f"remembered {category} {value[:60]}"],
+                )
+            finally:
+                store.close()
 
     store = _store()
     try:
