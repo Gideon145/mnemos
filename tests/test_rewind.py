@@ -26,22 +26,19 @@ def test_rewind_at_future_shows_everything_unchanged(tmp_path):
         store.close()
 
 
-def test_rewind_reconstructs_the_value_before_a_revision(tmp_path):
+def test_rewind_reconstructs_the_value_before_a_revision(tmp_path, monkeypatch):
     store = MemoryStore(tmp_path / "memory.db")
     try:
         _remember(store, "preference", "rate", "40 per hour")
+        monkeypatch.setattr(
+            "core.memory.revision._now", lambda: "2099-01-01T00:00:00+00:00"
+        )
         revise(store, "preference", "rate", "60 per hour", reason="raised")
 
         # Anchor just after the creation event: strictly before the
-        # revision, regardless of how fast the two ran.
-        creation_ts = next(
-            event["ts"]
-            for event in store.timeline(limit=100)
-            if "remembered"
-            in " ".join(
-                item if isinstance(item, str) else str(item)
-                for item in (event.get("acted") or [])
-            )
+        # pinned revision timestamp, regardless of real clock speed.
+        creation_ts = str(
+            store.recall_durable("preference", "rate").get("created_at") or ""
         )
         just_before = creation_ts + "1"
 

@@ -35,7 +35,10 @@ def main() -> int:
         report = dream(store)
         print(f"3 dream: scanned={report['events_scanned']} proposals={len(report['proposals'])} pending={[r.get('name') for r in pending(store)]}")
 
-        # 4. revise then rewind
+        # 4. revise then rewind (revision time pinned so the anchor is deterministic)
+        import core.memory.revision as revision_module
+
+        revision_module._now = lambda: "2099-01-01T00:00:00+00:00"
         revise(store, "preference", "style", "I like long answers", reason="flow test")
         creation_ts = str(
             store.recall_durable("preference", "style").get("created_at") or ""
