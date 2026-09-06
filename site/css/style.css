@@ -237,6 +237,30 @@ h2 {
   opacity: 0.5;
 }
 
+/* sibyl quote */
+.sibyl-quote {
+  max-width: 760px;
+  margin: 44px 0 0;
+  border-left: 3px solid var(--teal);
+  padding: 4px 0 4px 22px;
+  text-align: left;
+}
+.sibyl-quote p {
+  font-family: var(--display);
+  font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+  line-height: 1.55;
+  color: var(--ink);
+}
+.sibyl-quote cite {
+  display: block;
+  margin-top: 14px;
+  color: var(--muted);
+  font-style: normal;
+  font-size: 0.9rem;
+}
+.sibyl-quote cite a { color: var(--teal); text-decoration: none; }
+.sibyl-quote cite a:hover { text-decoration: underline; }
+
 /* improves cards */
 .cards {
   display: grid;
