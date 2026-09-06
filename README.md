@@ -84,7 +84,7 @@ reproduction steps: [docs/VERIFICATION.md](docs/VERIFICATION.md).
 
 - ⚖️ [Judge Guide](docs/JUDGE_GUIDE.md): 5-minute review, every claim mapped to file, test, and live artifact
 - ✅ [Verification](docs/VERIFICATION.md): Base mainnet tx + Virtuals ACP proof, reproducible
-- � [Demo Script](docs/DEMO_SCRIPT.md): the 2 to 5 minute demo, beat by beat
+
 - �🏛️ [Architecture](docs/ARCHITECTURE.md): full system design and data flow
 - 🧠 [Memory Model](docs/MEMORY_MODEL.md): entities, journals, gates
 - 📈 [PMF](docs/PMF.md): why Mnemos has to exist
