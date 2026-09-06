@@ -274,7 +274,7 @@ mnemos doctor
 `pay` is dry-run by default and journals everything. With `--live` and
 `MNEMOS_PAYER_KEY` set, it submits a real transaction on Base.
 
-### The Base proof, on the front page
+### The Base proof
 
 A live Base mainnet transaction from a memory-gated decision, Sep 5:
 
@@ -287,7 +287,7 @@ A live Base mainnet transaction from a memory-gated decision, Sep 5:
 - The only copy of the agreement lived in Sibyl Memory. There is no
   in-process fallback and the executor holds no terms
 
-### The Virtuals proof, on the front page
+### The Virtuals proof
 
 The agent runs real inference on Virtuals compute, dispatched from a
 remembered console agent id:
