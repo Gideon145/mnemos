@@ -11,6 +11,9 @@ def test_doctor_is_healthy_on_a_clean_system():
     assert names == [
         "durable write and recall",
         "gate opens on a remembered agreement",
+        "duplicate detection is clean on a fresh store",
+        "token budget is estimated",
+        "stale facts are counted after a revision",
         "journal seal verifies",
         "deletion empties recall",
         "deletion closes the gate",

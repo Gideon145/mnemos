@@ -18,6 +18,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from ..memory.entities import matched_entities
 from ..memory.store import DURABLE_CATEGORIES, MemoryStore
 
 _WORD = re.compile(r"[a-zA-Z0-9]{3,}")
@@ -141,7 +142,9 @@ class RecallEngine:
             if key in seen:
                 continue
             seen.add(key)
-            matches.append((_score_overlap(tokens, _entity_text(record)), record))
+            score = _score_overlap(tokens, _entity_text(record))
+            score += 3 * matched_entities(record, tokens)
+            matches.append((score, record))
 
         # Pass 2: lexical fallback, so plain wording still finds facts
         # the FTS index tokenizes differently.
@@ -151,6 +154,7 @@ class RecallEngine:
                 if key in seen:
                     continue
                 score = _score_overlap(tokens, _entity_text(record))
+                score += 3 * matched_entities(record, tokens)
                 if score:
                     seen.add(key)
                     matches.append((score, record))
