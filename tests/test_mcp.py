@@ -202,3 +202,10 @@ def test_change_intent_revises_the_name():
     assert applied == 1
     record = _scoped_store().recall_durable("identity", "john")
     assert record["body"]["value"] == "danny"
+
+
+def test_questions_never_state_facts():
+    assert mcp._is_question("what coffee do i like now") is True
+    assert mcp._is_question("do you know my rate?") is True
+    assert mcp._is_question("my name is dani") is False
+    assert mcp._is_question("change it to dark coffee") is False

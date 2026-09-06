@@ -515,6 +515,37 @@ _CHANGE_RE = re.compile(
     r"([a-z0-9 .,$]{1,60})"
 )
 
+_QUESTION_OPENERS = {
+    "what",
+    "how",
+    "when",
+    "where",
+    "who",
+    "why",
+    "do",
+    "does",
+    "did",
+    "can",
+    "could",
+    "would",
+    "should",
+    "is",
+    "are",
+    "was",
+    "were",
+}
+
+
+def _is_question(text: str) -> bool:
+    """Questions do not state facts, so nothing is extracted from them."""
+    lowered = text.strip().lower()
+    if not lowered:
+        return False
+    if lowered.endswith("?"):
+        return True
+    first = lowered.split()[0].rstrip(",")
+    return first in _QUESTION_OPENERS
+
 
 def _change_intents(text: str) -> list[tuple[str, str]]:
     """Deterministic 'change X to Y' detection over a chat message."""
@@ -598,8 +629,10 @@ def _chat_answer(user_text: str) -> str:
         store.close()
 
     # Facts the user states get stored before the model answers, so the
-    # memory the answer is grounded in already contains them.
-    for category, value in _extract_facts(user_text):
+    # memory the answer is grounded in already contains them. Questions
+    # state nothing, so nothing is extracted from them.
+    if not _is_question(user_text):
+        for category, value in _extract_facts(user_text):
         store = _store()
         try:
             store.remember_durable(category, _slug(value), {"value": value})
