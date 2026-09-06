@@ -76,6 +76,7 @@ Remote MCP: `https://mnemos-production-2572.up.railway.app/mcp`
 | MCP tools | 17 | `mnemos mcp` |
 | Device isolation | one store per browser, survives reopen | `tests/test_mcp.py` |
 | Waitlist | live, verifiable: sign up and watch the count move | `POST /waitlist`, `GET /waitlist/count` |
+| Real usage | distinct devices on the playground | `GET /stats` |
 | Pain point validated | the Sibyl account on the revision gap | [X reply](https://x.com/sibylcap/status/2096360556244435138) |
 | Journal seal | breaks on append, edit, delete | `tests/test_seal.py` |
 
@@ -100,5 +101,3 @@ Remote MCP: `https://mnemos-production-2572.up.railway.app/mcp`
 - Single-agent memory: no multi-agent shared store yet.
 - Revision is user-issued; nothing rewrites memory on its own except
   the review-gated proposals.
-
-> Build for a reviewer who will click around without you in the room.

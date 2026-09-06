@@ -345,15 +345,21 @@ document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
 // and a judge can verify it by signing up themselves.
 const waitlist = document.getElementById("waitlist-form");
 const waitlistCountEl = document.getElementById("waitlist-count");
+const deviceCountEl = document.getElementById("device-count");
 async function refreshWaitlistCount() {
   try {
-    const res = await fetch(MCP_URL.replace(/\/mcp$/, "/waitlist/count"));
+    const res = await fetch(MCP_URL.replace(/\/mcp$/, "/stats"));
     const data = await res.json();
     if (waitlistCountEl) {
-      const n = data.count || 0;
+      const n = data.waitlist || 0;
       waitlistCountEl.textContent =
         n + (n === 1 ? " person waiting" : " people waiting") +
         " for new memory features";
+    }
+    if (deviceCountEl) {
+      const d = data.devices || 0;
+      deviceCountEl.textContent =
+        d + (d === 1 ? " device" : " devices") + " have tried the playground";
     }
   } catch {
     /* backend unreachable, keep quiet */

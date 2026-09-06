@@ -502,6 +502,7 @@ tests.
 | Pulse, owner profile | shipped, 147 tests green | `mnemos pulse`, `mnemos owner` |
 | Per-device private stores | shipped, survives reopen | `tests/test_mcp.py`, playground on trymnemos.xyz |
 | Waitlist with a live verifiable count | live | `POST /waitlist`, `GET /waitlist/count` |
+| Playground usage | live, verifiable | `GET /stats` (distinct devices) |
 | Demo video | pending | script in `docs/DEMO_SCRIPT.md` |
 | Semantic/vector search | deliberately not shipped | recall is FTS + deterministic fallback |
 | Production auth on the hosted endpoint | deliberately not claimed | demo surface |
