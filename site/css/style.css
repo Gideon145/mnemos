@@ -501,6 +501,7 @@ footer {
 .hint { color: var(--muted); font-size: 0.9rem; }
 .hint a { color: var(--teal); text-decoration: none; }
 .hint a:hover { text-decoration: underline; }
+.pg-private { color: var(--muted); font-size: 0.8rem; margin: 0; }
 .copy-btn {
   align-self: flex-start;
   background: var(--teal-dim);
@@ -575,9 +576,27 @@ footer { text-align: left; padding: 60px 48px 40px; }
 
 @media (max-width: 760px) {
   .nav { padding: 14px 20px; gap: 10px; }
-  .nav nav { gap: 16px; }
+  .nav nav { gap: 16px; flex-wrap: wrap; }
+  .nav nav a { font-size: 0.85rem; }
   .nav .btn { display: none; }
   main { padding: 0 18px; }
   .hero { padding: 70px 0 40px; }
   .flow-line { display: none; }
+  .hero-terminal pre { font-size: 0.8rem; padding: 16px; }
+  .pg-shell { margin: 0; }
+  .pg-chips { padding: 0 16px 14px; }
+  .pg-chat { min-height: 320px; }
+  .agent-card pre { font-size: 0.75rem; overflow-x: auto; }
+  .final-cta h2 { font-size: 2rem; }
+}
+
+@media (max-width: 480px) {
+  .nav nav { display: none; }
+  .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat { padding: 18px 14px; }
+  .stat strong { font-size: 1.9rem; }
+  .gate-flow { gap: 8px; }
+  .flow-step { min-width: 140px; padding: 16px; }
+  .card { padding: 20px; }
+  .foot-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
 }

@@ -3,6 +3,21 @@
 
 const MCP_URL = "https://mnemos-production-2572.up.railway.app/mcp";
 
+// One private memory per browser. The id lives in localStorage, so a
+// returning device gets its own memory back and no other device sees it.
+let deviceId = "anon";
+try {
+  deviceId = localStorage.getItem("mnemos-device");
+  if (!deviceId) {
+    deviceId =
+      (window.crypto && crypto.randomUUID && crypto.randomUUID()) ||
+      String(Date.now()) + "-" + Math.random().toString(36).slice(2);
+    localStorage.setItem("mnemos-device", deviceId);
+  }
+} catch {
+  /* private mode or file://, fall back to the shared store */
+}
+
 const chat = document.getElementById("pg-chat");
 const form = document.getElementById("pg-form");
 const input = document.getElementById("pg-text");
@@ -80,7 +95,12 @@ function connect() {
 async function callTool(name, args) {
   if (!sessionId) await initialize();
   const payload = await postMCP(
-    { jsonrpc: "2.0", id: nextId++, method: "tools/call", params: { name, arguments: args } },
+    {
+      jsonrpc: "2.0",
+      id: nextId++,
+      method: "tools/call",
+      params: { name, arguments: { ...args, device: deviceId } },
+    },
     sessionId
   );
   if (payload.error) throw new Error(payload.error.message || "tool error");
@@ -272,7 +292,7 @@ form.addEventListener("submit", async (e) => {
     const res = await fetch(MCP_URL.replace(/\/mcp$/, "/chat"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: question }),
+      body: JSON.stringify({ message: question, device: deviceId }),
     });
     const data = await res.json();
     hideTyping();
@@ -326,18 +346,13 @@ if (waitlist) {
   });
 }
 
-// Warm up the connection on load, then reset so every visitor starts
-// with a fresh memory instead of inheriting previous visitors. Input
-// stays disabled until the wipe finishes so a fast user cannot race it.
+// Connect on load. Each device gets its own fresh store by
+// construction, and a returning device reconnects to the memory it
+// built before, so there is no reset: reopening keeps your memory.
 setReady(false);
 connect()
-  .then(async () => {
+  .then(() => {
     setStatus(true);
-    try {
-      await callTool("reset", {});
-    } catch {
-      /* reset is best effort */
-    }
     setReady(true);
   })
   .catch(() => {
