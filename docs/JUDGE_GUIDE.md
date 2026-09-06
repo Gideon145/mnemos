@@ -75,6 +75,8 @@ Remote MCP: `https://mnemos-production-2572.up.railway.app/mcp`
 | Doctor checks | 9 | `mnemos doctor` |
 | MCP tools | 17 | `mnemos mcp` |
 | Device isolation | one store per browser, survives reopen | `tests/test_mcp.py` |
+| Waitlist | live, verifiable: sign up and watch the count move | `POST /waitlist`, `GET /waitlist/count` |
+| Pain point validated | the Sibyl account on the revision gap | [X reply](https://x.com/sibylcap/status/2096360556244435138) |
 | Journal seal | breaks on append, edit, delete | `tests/test_seal.py` |
 
 ## 6. What makes this a Sibyl build

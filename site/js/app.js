@@ -341,13 +341,45 @@ const observer = new IntersectionObserver(
 document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
 
 // Waitlist stub.
+// Real waitlist: submissions land on the backend, the count is live
+// and a judge can verify it by signing up themselves.
 const waitlist = document.getElementById("waitlist-form");
+const waitlistCountEl = document.getElementById("waitlist-count");
+async function refreshWaitlistCount() {
+  try {
+    const res = await fetch(MCP_URL.replace(/\/mcp$/, "/waitlist/count"));
+    const data = await res.json();
+    if (waitlistCountEl) {
+      const n = data.count || 0;
+      waitlistCountEl.textContent =
+        n + (n === 1 ? " person waiting" : " people waiting") +
+        " for new memory features";
+    }
+  } catch {
+    /* backend unreachable, keep quiet */
+  }
+}
+refreshWaitlistCount();
 if (waitlist) {
-  waitlist.addEventListener("submit", (e) => {
+  waitlist.addEventListener("submit", async (e) => {
     e.preventDefault();
     const note = document.getElementById("waitlist-note");
-    note.textContent = "Noted. Mnemos will not forget you.";
-    waitlist.reset();
+    const input = waitlist.querySelector("input");
+    const email = input.value.trim();
+    try {
+      const res = await fetch(MCP_URL.replace(/\/mcp$/, "/waitlist"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "could not sign up");
+      note.textContent = "You are in. " + data.count + " people are waiting.";
+      input.value = "";
+      refreshWaitlistCount();
+    } catch (err) {
+      note.textContent = err.message;
+    }
   });
 }
 
