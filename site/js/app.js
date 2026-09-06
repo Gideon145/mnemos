@@ -3,6 +3,11 @@
 
 const MCP_URL = "https://mnemos-production-2572.up.railway.app/mcp";
 
+// Signal the reveal animation is safe to hide elements for. Until this
+// line runs, every section stays fully visible, so a slow connection
+// never renders a blank page.
+document.documentElement.classList.add("js");
+
 // One private memory per browser. The id lives in localStorage, so a
 // returning device gets its own memory back and no other device sees it.
 let deviceId = "anon";
