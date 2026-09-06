@@ -229,6 +229,21 @@ async function runAction(action) {
         "Memory at that moment: " + out.entities + " entities.\n\nChanged since:\n" + changed,
         "rewind · time travel"
       );
+    } else if (action === "pulse") {
+      addMsg("user", "What is the most urgent matter in my memory?");
+      showTyping();
+      const out = await callTool("pulse", {});
+      hideTyping();
+      const text = out.matter
+        ? out.matter + "\n\n(" + out.queued + " matter(s) queued)"
+        : "nothing queued right now";
+      addMsg("bot", text, "pulse · one per tick");
+    } else if (action === "owner") {
+      addMsg("user", "Show my curated owner profile.");
+      showTyping();
+      const out = await callTool("owner", {});
+      hideTyping();
+      addMsg("bot", out.profile || "(no profile yet)", "owner · curated");
     }
   } catch (err) {
     hideTyping();
