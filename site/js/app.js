@@ -395,9 +395,15 @@ document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
 const waitlist = document.getElementById("waitlist-form");
 const waitlistCountEl = document.getElementById("waitlist-count");
 const deviceCountEl = document.getElementById("device-count");
+const memoryNoteEl = document.getElementById("memory-note");
+const myMemoryNoteEl = document.getElementById("my-memory-note");
 async function refreshWaitlistCount() {
   try {
-    const res = await fetch(MCP_URL.replace(/\/mcp$/, "/stats"));
+    const res = await fetch(
+      MCP_URL.replace(/\/mcp$/, "/stats") +
+        "?device=" +
+        encodeURIComponent(deviceId)
+    );
     const data = await res.json();
     if (waitlistCountEl) {
       const n = data.waitlist || 0;
@@ -409,6 +415,21 @@ async function refreshWaitlistCount() {
       const d = data.devices || 0;
       deviceCountEl.textContent =
         d + (d === 1 ? " device" : " devices") + " have tried the playground";
+    }
+    if (memoryNoteEl) {
+      const f = data.facts || 0;
+      const r = data.recalls || 0;
+      memoryNoteEl.textContent =
+        "memory holds " + f + (f === 1 ? " fact" : " facts") +
+        " and has answered " + r + (r === 1 ? " question" : " questions");
+    }
+    if (myMemoryNoteEl && typeof data.your_facts === "number") {
+      myMemoryNoteEl.textContent =
+        "your memory: " +
+        data.your_facts +
+        (data.your_facts === 1 ? " fact, asked " : " facts, asked ") +
+        (data.your_asks || 0) +
+        " times";
     }
   } catch {
     /* backend unreachable, keep quiet */

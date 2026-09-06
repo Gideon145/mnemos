@@ -227,6 +227,16 @@ def test_device_memory_survives_reopen(tmp_path, monkeypatch):
     assert "short direct" in again.answer
 
 
+def test_usage_counters_track_remembers_and_asks(tmp_path, monkeypatch):
+    monkeypatch.setenv(mcp.DEVICES_ENV, str(tmp_path / "devices"))
+    mcp.remember("i like tea", category="preference", device="device-c")
+    mcp.ask("what do i like", device="device-c")
+
+    usage = mcp._read_usage("device-c")
+    assert usage.get("remembers") == 1
+    assert usage.get("asks") == 1
+
+
 def test_questions_never_state_facts():
     assert mcp._is_question("what coffee do i like now") is True
     assert mcp._is_question("do you know my rate?") is True

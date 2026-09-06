@@ -9,8 +9,10 @@ Run with: mnemos mcp  (or python -m core.mcp)
 """
 from __future__ import annotations
 
+import json
 import os
 import re
+import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -34,7 +36,7 @@ from .memory.revision import (
     reconsider as reconsider_memory,
     revise as revise_memory,
 )
-from .memory.store import MemoryStore
+from .memory.store import DURABLE_CATEGORIES, MemoryStore
 from .memory.tasks import Task, unfinished
 
 DB_ENV = "MNEMOS_DB"
@@ -84,6 +86,42 @@ def _store(device: str = "") -> MemoryStore:
         path.parent.mkdir(parents=True, exist_ok=True)
         return MemoryStore(path)
     return MemoryStore(os.environ.get(DB_ENV, DEFAULT_DB))
+
+
+_USAGE_LOCK = threading.Lock()
+
+
+def _usage_path(device: str) -> str:
+    return str(Path(_device_path(device)).with_name("usage.json"))
+
+
+def _bump_usage(device: str, key: str) -> None:
+    """Persistent per-device counters for remember/ask, for live usage stats."""
+    if not device:
+        return
+    path = _usage_path(device)
+    with _USAGE_LOCK:
+        data = {}
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as fh:
+                    data = json.load(fh)
+            except (OSError, ValueError):
+                data = {}
+        data[key] = int(data.get(key, 0)) + 1
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump(data, fh)
+        os.replace(tmp, path)
+
+
+def _read_usage(device: str) -> dict[str, int]:
+    path = _usage_path(device)
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return {}
 
 
 # ------------------------------------------------------------------ #
@@ -181,6 +219,7 @@ def remember(text: str, category: str = "preference", device: str = "") -> Remem
             evaluated={"category": category, "name": text},
             acted=[f"remembered {category} {text[:60]}"],
         )
+        _bump_usage(device, "remembers")
         return RememberResult(
             category=category,
             name=text,
@@ -196,6 +235,7 @@ def ask(question: str, device: str = "") -> AskResult:
     store = _store(device)
     try:
         answer = RecallEngine(store).ask(question)
+        _bump_usage(device, "asks")
         return AskResult(
             question=question,
             answer=answer.answer,
@@ -766,23 +806,67 @@ def run_server(http: bool = False) -> None:
         rows = await run_in_threadpool(entries, waitlist_path)
         return JSONResponse({"count": len(rows), "entries": rows})
 
-    async def stats_endpoint(_request: Any) -> JSONResponse:
-        """Public usage: distinct playground devices and waitlist count."""
+    async def stats_endpoint(request: Any) -> JSONResponse:
+        """Public usage: devices, waitlist, facts in memory, recalls served."""
         from .waitlist import count
+
+        device = request.query_params.get("device", "")
 
         def gather() -> dict[str, int]:
             devices_dir = os.environ.get("MNEMOS_DEVICES_DIR", "")
             devices = 0
+            facts = 0
+            recalls = 0
+            your_facts = 0
+            your_asks = 0
             if devices_dir:
                 root = Path(devices_dir)
                 if root.is_dir():
-                    devices = sum(
-                        1 for child in root.iterdir() if child.is_dir()
-                    )
-            return {
+                    for child in root.iterdir():
+                        if not child.is_dir():
+                            continue
+                        devices += 1
+                        usage = _read_usage(child.name)
+                        recalls += int(usage.get("asks", 0))
+                        db_file = child / "memory.db"
+                        if db_file.is_file():
+                            try:
+                                store = MemoryStore(db_file)
+                                try:
+                                    for category in DURABLE_CATEGORIES:
+                                        facts += len(
+                                            store.list_durable(category, limit=1000)
+                                        )
+                                finally:
+                                    store.close()
+                            except Exception:
+                                pass
+            if device:
+                usage = _read_usage(device)
+                your_asks = int(usage.get("asks", 0))
+                db_file = Path(_device_path(device))
+                if db_file.is_file():
+                    try:
+                        store = MemoryStore(db_file)
+                        try:
+                            for category in DURABLE_CATEGORIES:
+                                your_facts += len(
+                                    store.list_durable(category, limit=1000)
+                                )
+                        finally:
+                            store.close()
+                    except Exception:
+                        pass
+            out: dict[str, int] = {
                 "devices": devices,
                 "waitlist": count(waitlist_path),
+                "facts": facts,
+                "recalls": recalls,
             }
+            if device:
+                out["your_facts"] = your_facts
+                out["your_asks"] = your_asks
+            return out
 
         return JSONResponse(await run_in_threadpool(gather))
 
