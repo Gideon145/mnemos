@@ -204,6 +204,29 @@ def test_change_intent_revises_the_name():
     assert record["body"]["value"] == "danny"
 
 
+def test_devices_get_isolated_stores(tmp_path, monkeypatch):
+    monkeypatch.setenv(mcp.DEVICES_ENV, str(tmp_path / "devices"))
+    mcp.remember("my name is daniel", category="identity", device="device-a")
+
+    a = mcp.ask("what is my name", device="device-a")
+    b = mcp.ask("what is my name", device="device-b")
+
+    assert "daniel" in a.answer
+    assert a.found is True
+    assert "daniel" not in b.answer
+
+
+def test_device_memory_survives_reopen(tmp_path, monkeypatch):
+    monkeypatch.setenv(mcp.DEVICES_ENV, str(tmp_path / "devices"))
+    mcp.remember("i like short direct answers", category="preference", device="device-a")
+
+    # A fresh store object, same device id, must recall the fact.
+    again = mcp.ask("how do i like answers", device="device-a")
+
+    assert again.found is True
+    assert "short direct" in again.answer
+
+
 def test_questions_never_state_facts():
     assert mcp._is_question("what coffee do i like now") is True
     assert mcp._is_question("do you know my rate?") is True

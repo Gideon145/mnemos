@@ -38,6 +38,7 @@ from .memory.store import MemoryStore
 from .memory.tasks import Task, unfinished
 
 DB_ENV = "MNEMOS_DB"
+DEVICES_ENV = "MNEMOS_DEVICES_DIR"
 DEFAULT_DB = str(Path.home() / ".mnemos" / "memory.db")
 
 # Host 0.0.0.0 keeps FastMCP from auto-enabling localhost-only DNS
@@ -68,7 +69,20 @@ def _slug(text: str, limit: int = 48) -> str:
     return slug or "note"
 
 
-def _store() -> MemoryStore:
+def _device_path(device: str) -> str:
+    """One database per device, under the devices directory."""
+    slug = re.sub(r"[^a-zA-Z0-9_-]", "", device)[:64] or "anon"
+    base = os.environ.get(DEVICES_ENV, "")
+    if base:
+        return str(Path(base) / slug / "memory.db")
+    return str(Path(os.environ.get(DB_ENV, DEFAULT_DB)).parent / "devices" / slug / "memory.db")
+
+
+def _store(device: str = "") -> MemoryStore:
+    if device:
+        path = Path(_device_path(device))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        return MemoryStore(path)
     return MemoryStore(os.environ.get(DB_ENV, DEFAULT_DB))
 
 
@@ -156,9 +170,9 @@ class ResetResult:
 
 
 @server.tool(structured_output=True)
-def remember(text: str, category: str = "preference") -> RememberResult:
+def remember(text: str, category: str = "preference", device: str = "") -> RememberResult:
     """Store a durable fact. Categories: preference, lesson, identity."""
-    store = _store()
+    store = _store(device)
     try:
         store.remember_durable(category, text, {"value": text})
         annotate(store, category, text, text)
@@ -177,9 +191,9 @@ def remember(text: str, category: str = "preference") -> RememberResult:
 
 
 @server.tool(structured_output=True)
-def ask(question: str) -> AskResult:
+def ask(question: str, device: str = "") -> AskResult:
     """Ask the agent. It answers only from memory and says when it does not know."""
-    store = _store()
+    store = _store(device)
     try:
         answer = RecallEngine(store).ask(question)
         return AskResult(
@@ -193,9 +207,9 @@ def ask(question: str) -> AskResult:
 
 
 @server.tool(structured_output=True)
-def learn_lesson(text: str, severity: str = "medium") -> LessonResult:
+def learn_lesson(text: str, severity: str = "medium", device: str = "") -> LessonResult:
     """Record a failure as a lesson. Severity: low, medium, high."""
-    store = _store()
+    store = _store(device)
     try:
         learn(store, text, severity=severity)
         return LessonResult(severity=severity, text=text)
@@ -204,9 +218,9 @@ def learn_lesson(text: str, severity: str = "medium") -> LessonResult:
 
 
 @server.tool(structured_output=True)
-def task(objective: str) -> TaskResult:
+def task(objective: str, device: str = "") -> TaskResult:
     """Create a task that survives restarts."""
-    store = _store()
+    store = _store(device)
     try:
         name = _slug(objective)
         Task(store, name, objective=objective)
@@ -216,9 +230,9 @@ def task(objective: str) -> TaskResult:
 
 
 @server.tool(structured_output=True)
-def resume() -> ResumeResult:
+def resume(device: str = "") -> ResumeResult:
     """List unfinished work, work first."""
-    store = _store()
+    store = _store(device)
     try:
         items = [
             {
@@ -234,9 +248,9 @@ def resume() -> ResumeResult:
 
 
 @server.tool(structured_output=True)
-def recap_day() -> RecapResult:
+def recap_day(device: str = "") -> RecapResult:
     """Summarize the journal and standing agreements."""
-    store = _store()
+    store = _store(device)
     try:
         return RecapResult(text=recap(store).text)
     finally:
@@ -244,9 +258,9 @@ def recap_day() -> RecapResult:
 
 
 @server.tool(structured_output=True)
-def replay(subject: str) -> ReplayResult:
+def replay(subject: str, device: str = "") -> ReplayResult:
     """Show the causal chain for a subject, oldest first."""
-    store = _store()
+    store = _store(device)
     try:
         return ReplayResult(subject=subject, text=replay_memory(store, subject).text)
     finally:
@@ -255,10 +269,10 @@ def replay(subject: str) -> ReplayResult:
 
 @server.tool(structured_output=True)
 def revise(
-    category: str, name: str, new_value: str, reason: str = ""
+    category: str, name: str, new_value: str, reason: str = "", device: str = ""
 ) -> ReviseResult:
     """Correct a fact, then taint everything that depended on it."""
-    store = _store()
+    store = _store(device)
     try:
         result = revise_memory(
             store, category, name, new_value, reason=reason or None
@@ -277,9 +291,9 @@ def revise(
 
 
 @server.tool(structured_output=True)
-def blast(category: str, name: str) -> BlastResult:
+def blast(category: str, name: str, device: str = "") -> BlastResult:
     """Report the blast radius of a fact without changing anything."""
-    store = _store()
+    store = _store(device)
     try:
         radius = blast_radius_memory(store, f"{category}:{name}")
         return BlastResult(
@@ -295,10 +309,10 @@ def blast(category: str, name: str) -> BlastResult:
 
 @server.tool(structured_output=True)
 def reconsider(
-    category: str, name: str, decision: str, reason: str = ""
+    category: str, name: str, decision: str, reason: str = "", device: str = ""
 ) -> ReconsiderResult:
     """Review a suspect entity. decision: valid or invalid."""
-    store = _store()
+    store = _store(device)
     try:
         result = reconsider_memory(
             store, category, name, decision, reason=reason or None
@@ -313,9 +327,9 @@ def reconsider(
 
 
 @server.tool(structured_output=True)
-def suspect() -> SuspectResult:
+def suspect(device: str = "") -> SuspectResult:
     """List entities currently blocked by a revised memory."""
-    store = _store()
+    store = _store(device)
     try:
         blocked = []
         for category in ("agreement", "task"):
@@ -329,11 +343,11 @@ def suspect() -> SuspectResult:
 
 
 @server.tool(structured_output=True)
-def reset() -> ResetResult:
+def reset(device: str = "") -> ResetResult:
     """Wipe every durable entity so the memory starts fresh. The journal stays."""
     from .memory.store import DURABLE_CATEGORIES
 
-    store = _store()
+    store = _store(device)
     try:
         cleared = 0
         for category in DURABLE_CATEGORIES:
@@ -379,9 +393,9 @@ class OwnerResult:
 
 
 @server.tool(structured_output=True)
-def dream(min_hits: int = 2) -> DreamResult:
+def dream(min_hits: int = 2, device: str = "") -> DreamResult:
     """Consolidate the journal into review-gated proposals. Nothing applies itself."""
-    store = _store()
+    store = _store(device)
     try:
         report = dream_memory(store, min_hits=min_hits)
         return DreamResult(
@@ -394,9 +408,9 @@ def dream(min_hits: int = 2) -> DreamResult:
 
 
 @server.tool(structured_output=True)
-def rewind(at: str) -> RewindResult:
+def rewind(at: str, device: str = "") -> RewindResult:
     """Memory state at a past timestamp, with the diff to now."""
-    store = _store()
+    store = _store(device)
     try:
         result = rewind_memory(store, at)
         return RewindResult(
@@ -417,9 +431,9 @@ def rewind(at: str) -> RewindResult:
 
 
 @server.tool(structured_output=True)
-def pulse() -> PulseResult:
+def pulse(device: str = "") -> PulseResult:
     """Raise the most urgent matter memory is holding, at most one per tick."""
-    store = _store()
+    store = _store(device)
     try:
         result = pulse_memory(store)
         matter = result["matter"] or {}
@@ -433,9 +447,9 @@ def pulse() -> PulseResult:
 
 
 @server.tool(structured_output=True)
-def pulse_decline(matter_id: str) -> PulseResult:
+def pulse_decline(matter_id: str, device: str = "") -> PulseResult:
     """Suppress a pulse matter id so it never returns."""
-    store = _store()
+    store = _store(device)
     try:
         decline(store, matter_id)
         return PulseResult(matter_id=matter_id)
@@ -444,9 +458,9 @@ def pulse_decline(matter_id: str) -> PulseResult:
 
 
 @server.tool(structured_output=True)
-def owner() -> OwnerResult:
+def owner(device: str = "") -> OwnerResult:
     """The curated owner profile: identity, preferences, principles, agreements."""
-    store = _store()
+    store = _store(device)
     try:
         result = owner_profile(store)
         return OwnerResult(
@@ -616,7 +630,7 @@ def _apply_change_intents(store: MemoryStore, user_text: str) -> int:
     return applied
 
 
-def _chat_answer(user_text: str) -> str:
+def _chat_answer(user_text: str, device: str = "") -> str:
     """Answer conversationally, grounded in whatever memory currently holds."""
     api_key = os.environ.get("VIRTUALS_API_KEY")
     endpoint = os.environ.get("VIRTUALS_COMPUTE_URL")
@@ -628,7 +642,7 @@ def _chat_answer(user_text: str) -> str:
     # Change intents go through the same revision path as the CLI, so a
     # "change it to X" in chat actually changes memory before the model
     # answers. The model never claims an update memory did not receive.
-    store = _store()
+    store = _store(device)
     try:
         _apply_change_intents(store, user_text)
     finally:
@@ -639,7 +653,7 @@ def _chat_answer(user_text: str) -> str:
     # state nothing, so nothing is extracted from them.
     if not _is_question(user_text):
         for category, value in _extract_facts(user_text):
-            store = _store()
+            store = _store(device)
             try:
                 store.remember_durable(category, _slug(value), {"value": value})
                 store.record_event(
@@ -649,7 +663,7 @@ def _chat_answer(user_text: str) -> str:
             finally:
                 store.close()
 
-    store = _store()
+    store = _store(device)
     try:
         memory = RecallEngine(store).ask("what do you know about me?").answer
     finally:
@@ -719,7 +733,8 @@ def run_server(http: bool = False) -> None:
             text = str((body or {}).get("message", "")).strip()
             if not text:
                 return JSONResponse({"error": "message required"}, status_code=400)
-            answer = await run_in_threadpool(_chat_answer, text)
+            device = str((body or {}).get("device", "")).strip()
+            answer = await run_in_threadpool(_chat_answer, text, device)
             return JSONResponse({"answer": answer})
         except Exception as exc:  # pragma: no cover
             return JSONResponse({"error": str(exc)}, status_code=502)
