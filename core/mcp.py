@@ -760,6 +760,12 @@ def run_server(http: bool = False) -> None:
         total = await run_in_threadpool(count, waitlist_path)
         return JSONResponse({"count": total})
 
+    async def waitlist_list(_request: Any) -> JSONResponse:
+        from .waitlist import entries
+
+        rows = await run_in_threadpool(entries, waitlist_path)
+        return JSONResponse({"count": len(rows), "entries": rows})
+
     async def stats_endpoint(_request: Any) -> JSONResponse:
         """Public usage: distinct playground devices and waitlist count."""
         from .waitlist import count
@@ -794,6 +800,7 @@ def run_server(http: bool = False) -> None:
         Route("/chat", chat_endpoint, methods=["POST"]),
         Route("/waitlist", waitlist_endpoint, methods=["POST"]),
         Route("/waitlist/count", waitlist_count, methods=["GET"]),
+        Route("/waitlist/list", waitlist_list, methods=["GET"]),
         Route("/stats", stats_endpoint, methods=["GET"]),
     ]
     if site_dir and _Path(site_dir).is_dir():

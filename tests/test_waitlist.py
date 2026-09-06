@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from core.waitlist import add_email, count
+from core.waitlist import add_email, count, entries
 
 
 def test_add_email_stores_and_counts(tmp_path):
@@ -11,6 +11,15 @@ def test_add_email_stores_and_counts(tmp_path):
     assert add_email(path, "ada@example.com") == 1
     assert add_email(path, "bob@example.com") == 2
     assert count(path) == 2
+
+
+def test_entries_are_newest_first(tmp_path):
+    path = tmp_path / "waitlist.json"
+    add_email(path, "ada@example.com")
+    add_email(path, "bob@example.com")
+    rows = entries(path)
+    assert rows[0]["email"] == "bob@example.com"
+    assert rows[1]["email"] == "ada@example.com"
 
 
 def test_duplicate_email_does_not_double_count(tmp_path):

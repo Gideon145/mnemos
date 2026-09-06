@@ -48,3 +48,8 @@ def add_email(path: str | Path, email: str) -> int:
 
 def count(path: str | Path) -> int:
     return len(_read(Path(path)))
+
+
+def entries(path: str | Path) -> list[dict]:
+    """The full list, newest first. Emails only, no other data."""
+    return list(reversed(_read(Path(path))))
