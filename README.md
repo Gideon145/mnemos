@@ -274,8 +274,34 @@ mnemos doctor
 `pay` is dry-run by default and journals everything. With `--live` and
 `MNEMOS_PAYER_KEY` set, it submits a real transaction on Base.
 
-A live Base mainnet payment from a memory-gated decision is recorded in
-[docs/VERIFICATION.md](docs/VERIFICATION.md), with the explorer link.
+### The Base proof, on the front page
+
+A live Base mainnet transaction from a memory-gated decision, Sep 5:
+
+- Explorer: [0x1ed5b2674123e70a4de87ca9ceebad38f961fc6612c2206bb1456356ae46d194](https://basescan.org/tx/0x1ed5b2674123e70a4de87ca9ceebad38f961fc6612c2206bb1456356ae46d194), status 1
+- Agreement `hardening`, amount 50, walked through the state machine to
+  `delivered`, then paid live on mainnet
+- The refusal came first. The same flow tried to pay while the agreement
+  was only `agreed`, and the gate refused: nothing was broadcast. Then one
+  state at a time, `delegated`, `delivered`, executed, `paid`
+- The only copy of the agreement lived in Sibyl Memory. There is no
+  in-process fallback and the executor holds no terms
+
+### The Virtuals proof, on the front page
+
+The agent runs real inference on Virtuals compute, dispatched from a
+remembered console agent id:
+
+- Response id: `gen-1788586150-ntsOrSusCzLVFjEMdJfE`
+- Model: `anthropic/claude-fable-5` on `compute.virtuals.io/v1`
+- 256 tokens, $0.01104 billed to the agent wallet
+
+The model's own words from that run, on the exact gap Mnemos closes:
+
+> "I have no durable memory between conversations - this context window
+> is my only source of truth."
+
+Full captures and reproduction for both: [docs/VERIFICATION.md](docs/VERIFICATION.md).
 
 ## The gate and payment lifecycle
 
