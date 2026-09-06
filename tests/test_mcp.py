@@ -209,3 +209,13 @@ def test_questions_never_state_facts():
     assert mcp._is_question("do you know my rate?") is True
     assert mcp._is_question("my name is dani") is False
     assert mcp._is_question("change it to dark coffee") is False
+
+
+def test_adverb_statements_store_facts():
+    facts = mcp._extract_facts("i also like jazz music")
+    assert ("preference", "i like jazz music") in facts
+
+
+def test_love_statements_store_facts():
+    facts = mcp._extract_facts("i love long walks on the beach")
+    assert ("preference", "i love long walks on the beach") in facts

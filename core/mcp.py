@@ -497,6 +497,12 @@ def _extract_facts(text: str) -> list[tuple[str, str]]:
     for match in re.finditer(r"i like\s+([a-z0-9 ,.$]+?)" + boundary, lowered):
         add("preference", "i like " + match.group(1))
     for match in re.finditer(
+        r"i\s+(?:also\s+|really\s+|just\s+|kind\s+of\s+|kinda\s+)?(like|love)\s+"
+        r"([a-z0-9 ,.$]+?)" + boundary,
+        lowered,
+    ):
+        add("preference", "i " + match.group(1) + " " + match.group(2))
+    for match in re.finditer(
         r"my\s+([a-z][a-z ]*?)\s+is\s+([a-z0-9 .,$]+?)" + boundary, lowered
     ):
         subject = match.group(1).strip()
