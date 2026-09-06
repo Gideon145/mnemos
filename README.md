@@ -38,7 +38,7 @@ getting smarter, while agent memory still gets lost or costs tokens.
 Durable memory that survives the session, and recall that costs zero
 tokens.
 
-Built for the Sibyl Memory Hackathon, Sep 1 to 10, 2026. One design
+Built on Sibyl Memory, Sep 1 to 10, 2026. One design
 principle throughout: recall answers only from what memory actually
 holds, and nothing acts until memory says so. A forgotten fact is
 answered honestly, a refused payment is journaled as loudly as a paid
