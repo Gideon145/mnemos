@@ -123,7 +123,9 @@ def dream(
         collapsed = acted.replace(" ", "")
         evaluated = event.get("evaluated") or {}
 
-        if acted:
+        # Housekeeping events are not patterns to learn from.
+        housekeeping = "resetmemory" in collapsed or collapsed.startswith("dream")
+        if acted and not housekeeping:
             signatures[acted.lower()] += 1
 
         found = evaluated.get("found")
