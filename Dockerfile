@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir .[mcp]
 ENV PORT=8000
 ENV MNEMOS_DB=/data/memory.db
 ENV MNEMOS_DEVICES_DIR=/data/devices
+ENV WAITLIST_PATH=/data/waitlist.json
 ENV SITE_DIR=/app/site
 
 EXPOSE 8000

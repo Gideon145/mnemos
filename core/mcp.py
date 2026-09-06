@@ -739,6 +739,27 @@ def run_server(http: bool = False) -> None:
         except Exception as exc:  # pragma: no cover
             return JSONResponse({"error": str(exc)}, status_code=502)
 
+    waitlist_path = os.environ.get(
+        "WAITLIST_PATH", "/data/waitlist.json"
+    )
+
+    async def waitlist_endpoint(request: Any) -> JSONResponse:
+        from .waitlist import add_email
+
+        try:
+            body = await request.json()
+            email = str((body or {}).get("email", "")).strip()
+            total = await run_in_threadpool(add_email, waitlist_path, email)
+            return JSONResponse({"count": total})
+        except ValueError as exc:
+            return JSONResponse({"error": str(exc)}, status_code=400)
+
+    async def waitlist_count(_request: Any) -> JSONResponse:
+        from .waitlist import count
+
+        total = await run_in_threadpool(count, waitlist_path)
+        return JSONResponse({"count": total})
+
     base = server.streamable_http_app()
 
     @asynccontextmanager
@@ -749,7 +770,11 @@ def run_server(http: bool = False) -> None:
             yield
 
     site_dir = os.environ.get("SITE_DIR", "")
-    routes: list[Any] = [Route("/chat", chat_endpoint, methods=["POST"])]
+    routes: list[Any] = [
+        Route("/chat", chat_endpoint, methods=["POST"]),
+        Route("/waitlist", waitlist_endpoint, methods=["POST"]),
+        Route("/waitlist/count", waitlist_count, methods=["GET"]),
+    ]
     if site_dir and _Path(site_dir).is_dir():
         index_file = _Path(site_dir) / "index.html"
 
