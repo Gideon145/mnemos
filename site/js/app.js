@@ -33,14 +33,46 @@ const status = document.getElementById("pg-status");
 const deviceIdEl = document.getElementById("pg-device-id");
 if (deviceIdEl) deviceIdEl.textContent = deviceId;
 const deviceCopyBtn = document.getElementById("pg-device-copy");
+
+// Clipboard API first, hidden-textarea execCommand second. Some browsers
+// reject the async API without focus or permissions; the fallback always works.
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+  } catch {
+    /* fall through to the legacy path */
+  }
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed";
+  ta.style.top = "-9999px";
+  document.body.appendChild(ta);
+  ta.select();
+  ta.setSelectionRange(0, text.length);
+  const ok = document.execCommand("copy");
+  document.body.removeChild(ta);
+  if (!ok) throw new Error("copy blocked");
+}
+
 if (deviceCopyBtn) {
   deviceCopyBtn.addEventListener("click", async () => {
     try {
-      await navigator.clipboard.writeText(deviceId);
+      await copyText(deviceId);
       deviceCopyBtn.textContent = "Copied";
       setTimeout(() => (deviceCopyBtn.textContent = "Copy"), 1500);
     } catch {
-      deviceCopyBtn.textContent = "Blocked";
+      // Even the fallback failed: select the id so it can be copied manually.
+      const range = document.createRange();
+      range.selectNodeContents(deviceIdEl);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      deviceCopyBtn.textContent = "Select all";
+      setTimeout(() => (deviceCopyBtn.textContent = "Copy"), 2500);
     }
   });
 }
@@ -330,7 +362,7 @@ form.addEventListener("submit", async (e) => {
 document.querySelectorAll(".copy-btn").forEach((btn) => {
   btn.addEventListener("click", async () => {
     try {
-      await navigator.clipboard.writeText(btn.dataset.copy || "");
+      await copyText(btn.dataset.copy || "");
       btn.textContent = "Copied";
       btn.classList.add("copied");
       setTimeout(() => {
