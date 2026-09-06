@@ -760,6 +760,26 @@ def run_server(http: bool = False) -> None:
         total = await run_in_threadpool(count, waitlist_path)
         return JSONResponse({"count": total})
 
+    async def stats_endpoint(_request: Any) -> JSONResponse:
+        """Public usage: distinct playground devices and waitlist count."""
+        from .waitlist import count
+
+        def gather() -> dict[str, int]:
+            devices_dir = os.environ.get("MNEMOS_DEVICES_DIR", "")
+            devices = 0
+            if devices_dir:
+                root = Path(devices_dir)
+                if root.is_dir():
+                    devices = sum(
+                        1 for child in root.iterdir() if child.is_dir()
+                    )
+            return {
+                "devices": devices,
+                "waitlist": count(waitlist_path),
+            }
+
+        return JSONResponse(await run_in_threadpool(gather))
+
     base = server.streamable_http_app()
 
     @asynccontextmanager
@@ -774,6 +794,7 @@ def run_server(http: bool = False) -> None:
         Route("/chat", chat_endpoint, methods=["POST"]),
         Route("/waitlist", waitlist_endpoint, methods=["POST"]),
         Route("/waitlist/count", waitlist_count, methods=["GET"]),
+        Route("/stats", stats_endpoint, methods=["GET"]),
     ]
     if site_dir and _Path(site_dir).is_dir():
         index_file = _Path(site_dir) / "index.html"
