@@ -162,3 +162,33 @@ def test_name_capture_stops_at_next_fact_without_and():
     facts = mcp._extract_facts("my name is john i live in india")
     assert ("identity", "john") in facts
     assert ("preference", "i live in india") in facts
+
+
+def test_change_intents_parse_change_to():
+    assert mcp._change_intents("change my coffee to dark coffee") == [
+        ("coffee", "dark coffee")
+    ]
+    assert mcp._change_intents("change it to dark coffee") == [
+        ("it", "dark coffee")
+    ]
+    assert mcp._change_intents("what coffee do i like") == []
+
+
+def test_change_intent_revises_the_matching_preference():
+    mcp.remember("my coffee order is espresso", category="preference")
+
+    applied = mcp._apply_change_intents(_scoped_store(), "change it to dark coffee")
+
+    assert applied == 1
+    record = _scoped_store().recall_durable(
+        "preference", "my coffee order is espresso"
+    )
+    assert record["body"]["value"] == "dark coffee"
+
+
+def test_change_intent_leaves_unrelated_facts_alone():
+    mcp.remember("my contractor rate is 40 per hour", category="preference")
+
+    applied = mcp._apply_change_intents(_scoped_store(), "change it to dark coffee")
+
+    assert applied == 0

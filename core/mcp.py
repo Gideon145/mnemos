@@ -510,6 +510,59 @@ def _extract_facts(text: str) -> list[tuple[str, str]]:
     return facts
 
 
+_CHANGE_RE = re.compile(
+    r"(?:change|update|set)\s+(?:my\s+)?([a-z0-9 ]{1,50}?)\s+to\s+"
+    r"([a-z0-9 .,$]{1,60})"
+)
+
+
+def _change_intents(text: str) -> list[tuple[str, str]]:
+    """Deterministic 'change X to Y' detection over a chat message."""
+    lowered = text.lower()
+    intents: list[tuple[str, str]] = []
+    for match in _CHANGE_RE.finditer(lowered):
+        subject = match.group(1).strip().rstrip(" .,")
+        new_value = match.group(2).strip().rstrip(" .,")
+        if subject and new_value and len(new_value.split()) <= 10:
+            intents.append((subject, new_value))
+    return intents
+
+
+def _apply_change_intents(store: MemoryStore, user_text: str) -> int:
+    """Revise the matching active preference for every change intent.
+
+    A pronoun subject ("change it to dark coffee") resolves against the
+    words of the new value, so the preference about coffee is the one
+    that gets revised. Deterministic: no model decides the match.
+    """
+    applied = 0
+    for subject, new_value in _change_intents(user_text):
+        tokens = [word for word in subject.split() if len(word) > 2]
+        if not tokens:
+            tokens = [word for word in new_value.split() if len(word) > 2]
+        if not tokens:
+            continue
+        best: dict[str, Any] | None = None
+        best_score = 0
+        for record in store.list_durable("preference"):
+            if record.get("status") not in (None, "active"):
+                continue
+            value = str((record.get("body") or {}).get("value") or "").lower()
+            score = sum(1 for token in tokens if token in value)
+            if score > best_score:
+                best, best_score = record, score
+        if best is not None:
+            revise_memory(
+                store,
+                "preference",
+                best.get("name"),
+                new_value,
+                reason="chat correction",
+            )
+            applied += 1
+    return applied
+
+
 def _chat_answer(user_text: str) -> str:
     """Answer conversationally, grounded in whatever memory currently holds."""
     api_key = os.environ.get("VIRTUALS_API_KEY")
@@ -518,6 +571,15 @@ def _chat_answer(user_text: str) -> str:
         raise RuntimeError(
             "the hosted chat needs VIRTUALS_API_KEY and VIRTUALS_COMPUTE_URL"
         )
+
+    # Change intents go through the same revision path as the CLI, so a
+    # "change it to X" in chat actually changes memory before the model
+    # answers. The model never claims an update memory did not receive.
+    store = _store()
+    try:
+        _apply_change_intents(store, user_text)
+    finally:
+        store.close()
 
     # Facts the user states get stored before the model answers, so the
     # memory the answer is grounded in already contains them.

@@ -110,12 +110,19 @@ class RecallEngine:
         matches: list[tuple[int, dict[str, Any]]] = []
 
         # Pass 0: a question about the whole memory lists everything
-        # durable instead of searching for one fact.
+        # durable instead of searching for one fact. Proposed and
+        # archived entities are not facts yet (or anymore): they stay
+        # out of the all-about listing. Lifecycle states (agreed,
+        # delivered, paid, working, ...) are still facts.
         lowered = question.lower()
         if any(phrase in lowered for phrase in _ALL_ABOUT_PHRASES):
             records = []
             for category in DURABLE_CATEGORIES:
-                records.extend(self._store.list_durable(category))
+                records.extend(
+                    record
+                    for record in self._store.list_durable(category)
+                    if record.get("status") not in ("proposed", "archived")
+                )
             if not records:
                 return RecallAnswer(
                     question=question,
