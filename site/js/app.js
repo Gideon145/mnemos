@@ -191,6 +191,44 @@ async function runAction(action) {
       });
       hideTyping();
       addMsg("bot", renderStructured(out), "blast");
+    } else if (action === "dream") {
+      addMsg("user", "Dream over the journal and consolidate it.");
+      showTyping();
+      const out = await callTool("dream", { min_hits: 1 });
+      hideTyping();
+      const proposals = out.proposals && out.proposals.length
+        ? out.proposals.join("\n")
+        : "(nothing new to consolidate)";
+      addMsg(
+        "bot",
+        "Scanned " + out.events_scanned + " new journal events.\n\nProposals:\n" + proposals,
+        "dream · review-gated"
+      );
+    } else if (action === "rewind") {
+      addMsg("user", "Rewrite my coffee order, then rewind to before it.");
+      showTyping();
+      const created = await callTool("remember", {
+        text: "my coffee order is espresso",
+        category: "preference",
+      });
+      await callTool("revise", {
+        category: "preference",
+        name: "my coffee order is espresso",
+        new_value: "latte",
+        reason: "changed taste",
+      });
+      const out = await callTool("rewind", { at: (created.created_at || "") + "1" });
+      hideTyping();
+      const changed = out.changed && out.changed.length
+        ? out.changed
+            .map((c) => c.entity + ": was " + c.at + ", now " + c.now)
+            .join("\n")
+        : "(nothing changed since)";
+      addMsg(
+        "bot",
+        "Memory at that moment: " + out.entities + " entities.\n\nChanged since:\n" + changed,
+        "rewind · time travel"
+      );
     }
   } catch (err) {
     hideTyping();

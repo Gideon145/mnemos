@@ -23,6 +23,7 @@
     <nav>
       <a href="#gate">The gate</a>
       <a href="#improves">What memory improves</a>
+      <a href="#learns">How it learns</a>
       <a href="#measured">Measured</a>
       <a href="#agent">Use on your agent</a>
       <a href="#playground">Playground</a>
@@ -56,10 +57,10 @@
     </section>
 
     <section class="stats reveal">
-      <div class="stat"><strong>100</strong><span>tests, all green</span></div>
+      <div class="stat"><strong>130</strong><span>tests, all green</span></div>
       <div class="stat"><strong>2</strong><span>partner stacks, live</span></div>
       <div class="stat"><strong>1</strong><span>revision gate</span></div>
-      <div class="stat"><strong>11</strong><span>MCP tools, hosted</span></div>
+      <div class="stat"><strong>14</strong><span>MCP tools, hosted</span></div>
     </section>
 
     <section class="gate reveal" id="gate">
@@ -107,6 +108,32 @@
           <div class="card-num">04</div>
           <h3>Corrections</h3>
           <p>When a memory turns out wrong, everything built on it becomes suspect until reviewed. Nothing deleted, all journaled.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="improves reveal" id="learns">
+      <h2>How it learns</h2>
+      <div class="cards">
+        <article class="card">
+          <div class="card-num">01</div>
+          <h3>Dream</h3>
+          <p>Background consolidation over the journal. Repeated patterns, unanswered questions, and refused payments become review-gated proposals. Nothing applies itself.</p>
+        </article>
+        <article class="card">
+          <div class="card-num">02</div>
+          <h3>Rewind</h3>
+          <p>Memory at any past moment. Walk the revision history backwards and diff what changed: what did we believe, and when did it change.</p>
+        </article>
+        <article class="card">
+          <div class="card-num">03</div>
+          <h3>Entities</h3>
+          <p>Deterministic entity extraction on every fact. Recall boosts facts that share an entity with the question. Zero model calls.</p>
+        </article>
+        <article class="card">
+          <div class="card-num">04</div>
+          <h3>Hybrid search</h3>
+          <p>FTS first, semantic assist when you bring a key. An optional embedder fuses cosine with keyword search, off by default.</p>
         </article>
       </div>
     </section>
@@ -188,6 +215,8 @@
           <button class="chip" data-action="ask">What do you know about me?</button>
           <button class="chip" data-action="revise">Revise my contractor rate</button>
           <button class="chip" data-action="blast">Run blast radius</button>
+          <button class="chip" data-action="dream">Dream consolidation</button>
+          <button class="chip" data-action="rewind">Rewind a revision</button>
         </div>
         <form class="pg-input" id="pg-form">
           <input id="pg-text" type="text" placeholder="Chat with Mnemos. Try: how are you?" autocomplete="off" />
@@ -221,6 +250,7 @@
         <a href="#playground">Live playground</a>
         <a href="#gate">The revision gate</a>
         <a href="#improves">What memory improves</a>
+        <a href="#learns">How it learns</a>
       </div>
       <div class="foot-col">
         <h4>VERIFY</h4>
