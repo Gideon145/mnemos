@@ -146,12 +146,25 @@ Memory is not the feature. What memory changes is the feature.
 - **Tasks that survive restarts.** `resume` lists unfinished work, work first.
 - **Causal replay.** Every write, recall, and refusal is journaled. `replay`
   shows the chain that changed a decision.
-- **The deletion test, on demand.** `doctor` proves memory is load-bearing.
+- **Dream.** Background consolidation over the journal. Repeated patterns,
+  unanswered questions, and refused payments become review-gated proposals.
+  `mnemos dream`, then `--apply` or `--reject`. Nothing applies itself.
+- **Rewind.** Memory at any past moment. `mnemos rewind --at <timestamp>`
+  reconstructs the value every fact held then and diffs what changed since.
+- **Entities.** Deterministic entity extraction on every remembered fact.
+  Recall boosts facts that share an entity with the question, and
+  `mnemos entities` prints the index. Zero model calls.
+- **Hybrid search, optional.** FTS first, semantic assist when you bring an
+  embedding key. `mnemos embed --hash` for the offline demo. Off by default.
+- **The deletion test, on demand.** `doctor` proves memory is load-bearing,
+  and reports hygiene: duplicates, stale facts, and the token budget of the
+  hot set.
 
 ## Use Mnemos from any agent (MCP)
 
-`mnemos mcp` serves the same 12 tools (remember, ask, lessons, tasks, replay,
-revise, blast, reconsider, suspect, reset, and more) to any MCP client over stdio.
+`mnemos mcp` serves the same 14 tools (remember, ask, lessons, tasks, replay,
+revise, blast, reconsider, suspect, reset, dream, rewind, and more) to any
+MCP client over stdio.
 
 ```bash
 pip install '.[mcp]'
@@ -185,7 +198,7 @@ everything:
 |---|---|
 | `/` | The live playground site |
 | `/chat` | Agentic chat. Facts are extracted and stored before the model answers |
-| `/mcp` | Streamable HTTP MCP: 12 tools with typed outputs |
+| `/mcp` | Streamable HTTP MCP: 14 tools with typed outputs |
 | `/assets` `/css` `/js` | Static site assets |
 
 CORS is open on the hosted app, the MCP client reconnects automatically
@@ -217,6 +230,10 @@ site in under two minutes.
 | Causal replay | `mnemos replay` | `core/agent/replay.py` |
 | Day summary | `mnemos recap` | `core/agent/recap.py` |
 | Reflection | `mnemos reflect` / `proposals` / `accept` | `core/memory/reflection.py` |
+| Dream | `mnemos dream` / `--list` / `--apply` / `--reject` | `core/memory/dream.py` |
+| Rewind | `mnemos rewind --at` | `core/memory/rewind.py` |
+| Entities | `mnemos entities`, recall boost | `core/memory/entities.py` |
+| Hybrid search | `mnemos embed` | `core/memory/embed.py` |
 | Revision | `mnemos revise` / `blast` / `reconsider` / `suspect` | `core/memory/revision.py` |
 | MCP surface | `mnemos mcp` | `core/mcp.py` |
 | Deletion test | `mnemos doctor` | `core/memory/doctor.py` |
@@ -224,7 +241,7 @@ site in under two minutes.
 ## Testing
 
 ```bash
-python -m pytest tests -q      # 111 passing
+python -m pytest tests -q      # 130 passing
 ```
 
 | Suite | Tests | Focus |
@@ -235,6 +252,8 @@ python -m pytest tests -q      # 111 passing
 | `test_virtuals` | 9 | registration and dispatch, memory write-back |
 | `test_recall` | 7 | recall honesty, including the empty-memory case |
 | `test_payments` | 6 | pending claims, duplicate refusal, paid only on receipt |
+| `test_dream` | 6 | consolidation proposals, review gate, cursor safety |
+| `test_entities` | 6 | extraction, annotation, index, recall boost |
 | `test_reflection` | 5 | journal patterns become proposals, not preferences |
 | `test_tasks` | 5 | work that survives a restart |
 | `test_keepsake` | 4 | a fresh machine gets the agent back |
@@ -243,7 +262,9 @@ python -m pytest tests -q      # 111 passing
 | `test_replay` | 4 | the causal chain as the journal recorded it |
 | `test_recap` | 4 | the journal reported back as an audit |
 | `test_scar_gate` | 4 | memory of failure vetoes future actions |
+| `test_embed` | 4 | optional hybrid recall, deterministic hash embedder |
 | `test_seal` | 4 | journal seal, deletions break the chain |
+| `test_rewind` | 3 | value reconstruction across a revision |
 | `test_delegation` | 3 | handing work to another agent, remembered |
 | `test_doctor` | 2 | the deletion test, on demand |
 | `test_handoff` | 2 | give another agent your memory, on purpose |
@@ -368,7 +389,7 @@ you / any MCP client
 
 ```
 core/
-  mcp.py                12 tools, agentic chat, static site server
+  mcp.py                14 tools, agentic chat, static site server
   cli.py                the command line surface
   agent/
     recall.py           FTS + lexical recall, honest empty answer
@@ -387,13 +408,17 @@ core/
     handoff.py          give another agent your memory
     links.py            relational breadcrumbs between entities
     reflection.py       journal patterns become proposed preferences
+    dream.py            review-gated consolidation proposals
+    rewind.py           memory state at any past moment
+    entities.py         deterministic extraction and recall boost
+    embed.py            optional hybrid recall behind a flag
   payments/
     executor.py         dry-run and Base executors, claim-before-broadcast
   integrations/
     virtuals.py         Virtuals registration and dispatch, memory write-back
 scripts/                 ablation, evidence capture, deploy checks
 site/                    the static playground site
-tests/                   111 tests
+tests/                   130 tests
 docs/                    all the supplemental docs
 ```
 
@@ -411,13 +436,16 @@ tests.
 - A revised fact makes everything that depended on it suspect, and the
   gate stays closed until each item is reconsidered.
 - Appending, editing, or deleting journal events breaks the seal.
+- A dream proposal never applies itself: it becomes a lesson only through
+  an explicit apply.
+- Rewind answers only from recorded history and the journal.
 - A keepsake pack restores a fresh agent on a fresh machine.
 
 ## Honest status
 
 | Area | Status | Proof |
 |---|---|---|
-| Memory core, recall, gate, lessons, tasks, revision | shipped, 111 tests green | `pytest` |
+| Memory core, recall, gate, lessons, tasks, revision | shipped, 130 tests green | `pytest` |
 | Base mainnet payment from a gated decision | verified live | `docs/VERIFICATION.md` |
 | Virtuals ACP dispatch | verified live, billed | `docs/VERIFICATION.md` |
 | Hosted MCP endpoint, Smithery, Railway | live | badges above |
@@ -425,6 +453,7 @@ tests.
 | Tamper-evident journal seal | shipped | `mnemos seal`, `mnemos doctor` |
 | Pending payment claims | shipped | `tests/test_payments.py` |
 | Measured ablation numbers | shipped, seeded | `scripts/ablation.py` |
+| Dream, rewind, entities, optional hybrid search | shipped, 130 tests green | `mnemos dream`, `mnemos rewind`, `mnemos entities`, `mnemos embed` |
 | Demo video | pending | script in `docs/DEMO_SCRIPT.md` |
 | Semantic/vector search | deliberately not shipped | recall is FTS + deterministic fallback |
 | Production auth on the hosted endpoint | deliberately not claimed | demo surface |
