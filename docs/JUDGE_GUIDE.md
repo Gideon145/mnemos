@@ -1,64 +1,102 @@
-# Judge Guide — Mnemos (5 minutes)
+# Judge Guide - Mnemos (4 minutes)
 
-Every claim below maps to a file, a test, or a live artifact. No claim on
-this page is asserted without one of the three.
+An agent whose memory is the product. Durable memory on Sibyl. Money gates
+on remembered agreements on Base. Compute dispatches from remembered
+identity on Virtuals. When a fact is corrected, everything built on it
+becomes suspect and the gate closes until each dependent is reconsidered.
+147 tests. One Base mainnet tx. One billed Virtuals dispatch. Everything
+on this page is clickable in four minutes.
 
-## The 60 second version
+---
 
-1. Mnemos stores facts, agreements, lessons, and tasks in Sibyl Memory.
-2. A fresh session recalls them and the recall changes what the agent may do.
-3. Money moves only when a remembered, delivered agreement covers it.
-4. Correcting a memory computes the blast radius, taints dependents, and the
-   gate refuses until each is reconsidered.
-5. Deleting the memory breaks recall, the gate, and the journal seal.
+## 1. See it work (60 seconds)
 
-## Load-bearing map (memory is the critical path)
+Go to **[trymnemos.xyz](https://trymnemos.xyz)**
+(alt: **[mnemos-production-2572.up.railway.app](https://mnemos-production-2572.up.railway.app)**).
 
-| Claim | Code | Test |
+- Click **Teach me two facts** - the chips run raw MCP tools, not
+  canned text.
+- Click **What do you know about me?** - the answer comes from memory
+  only.
+- Type in chat: `my name is alex`, then `what is my name` - the answer
+  is grounded in what memory holds, never invented.
+- Each browser gets a **private store**: a device id in localStorage
+  scopes every call, and reopening the page keeps that browser's memory.
+
+## 2. The load-bearing moment (60 seconds)
+
+In the playground, click **Revise my contractor rate** then **Run blast
+radius**.
+
+Or on the CLI:
+
+```bash
+pip install .
+mnemos agree contractor --with alice --amount 160
+mnemos pay contractor 160 --live --network mainnet   # refused: not delivered
+mnemos advance contractor --to delegated
+mnemos advance contractor --to delivered
+mnemos pay contractor 160 --live --network mainnet   # executed
+mnemos revise preference contractor_rate 60 --reason corrected
+mnemos pay contractor 160                            # refused: suspect
+mnemos reconsider agreement contractor --valid --reason "fixed price"
+mnemos pay contractor 160                            # gate reopened
+mnemos doctor                                       # deletion breaks everything
+```
+
+## 3. Verify the partner stacks (60 seconds)
+
+| Stack | What ran | Proof |
 |---|---|---|
-| Durable facts survive sessions | `core/memory/store.py` | `tests/test_memory.py` |
-| Recall changes answers, says when empty | `core/agent/recall.py` | `tests/test_recall.py` |
-| Gate refuses without a delivered agreement | `core/memory/gate.py` | `tests/test_payments.py` |
-| Scar gate vetoes unresolved lessons | `core/memory/gate.py` `_unresolved_scars` | `tests/test_scar_gate.py` |
-| Revision taints dependents, closes the gate | `core/memory/revision.py` | `tests/test_revision.py` (19 cases) |
-| Reconsider reopens the gate | `core/memory/revision.py` `reconsider` | `tests/test_revision.py` |
-| Payment claims block duplicate broadcast | `core/payments/executor.py` `_intent_key` | `tests/test_payments.py` |
-| Journal is tamper-evident | `core/memory/seal.py` | `tests/test_seal.py` |
-| Deletion empties recall and closes the gate | `core/memory/doctor.py` | `tests/test_doctor.py` |
-| Fresh-machine keepsake restores the agent | `core/memory/keepsake.py` | `tests/test_keepsake.py` |
-| Tasks survive restarts | `core/memory/tasks.py` | `tests/test_tasks.py` |
-| Causal replay | `core/agent/replay.py` | `tests/test_replay.py` |
+| Base | Payment gate refused while `agreed`, executed once `delivered` | [mainnet tx `0x1ed5b2...46d194`](https://basescan.org/tx/0x1ed5b2674123e70a4de87ca9ceebad38f961fc6612c2206bb1456356ae46d194), status 1 |
+| Virtuals | ACP dispatch from a remembered console agent id | response `gen-1788586150-ntsOrSusCzLVFjEMdJfE`, `anthropic/claude-fable-5`, 256 tokens, $0.01104 billed |
 
-## Measured, not marketed
+Both reproduce from `docs/VERIFICATION.md`:
+`scripts/evidence_pay.py` and `scripts/capture_dispatch.py`.
 
-`scripts/ablation.py` runs the real gate on seeded trials (12, seed 1337):
+## 4. CLI + MCP (30 seconds)
 
-| Arm | Allowed | Refused |
+```bash
+pip install '.[mcp]'
+mnemos mcp --db ~/.mnemos/memory.db
+```
+
+Remote MCP: `https://mnemos-production-2572.up.railway.app/mcp`
+(17 tools, typed outputs). One-click install:
+[Smithery](https://smithery.ai/servers/mnemos/mnemos).
+
+## 5. Numbers you can verify
+
+| Metric | Value | Proof |
 |---|---|---|
-| Memory on: remembered, delivered agreement | 12 | 0 |
-| Memory off: same request, wiped store | 0 | 12 |
-| Revision on: suspect until reconsider | 0 | 12 |
-| Revision off: same agreement, no suspect check | 12 | 0 |
+| Tests | 147, all green | `python -m pytest tests -q` |
+| Ablation, memory off | 0/12 allowed | `scripts/ablation.py` |
+| Ablation, revision on | 0/12 while suspect, 12/12 after reconsider | `scripts/ablation.py` |
+| Doctor checks | 9 | `mnemos doctor` |
+| MCP tools | 17 | `mnemos mcp` |
+| Device isolation | one store per browser, survives reopen | `tests/test_mcp.py` |
+| Journal seal | breaks on append, edit, delete | `tests/test_seal.py` |
 
-Reproduce: `python scripts/ablation.py`. Pinned by `tests/test_ablation.py`.
+## 6. What makes this a Sibyl build
 
-## Live artifacts
-
-- Base mainnet payment from a memory-gated decision: `0x1ed5b2...46d194`
-  (Sep 5), plus the original `0xb685f5fd...d68a84`. See `docs/VERIFICATION.md`.
-- Virtuals ACP dispatch, billed, with the model honestly refusing the
-  no-memory roleplay: `gen-1788586150-ntsOrSusCzLVFjEMdJfE`. See
-  `docs/VERIFICATION.md`.
-- Hosted MCP endpoint (11 tools, typed outputs):
-  `https://mnemos-production-2572.up.railway.app/mcp`
-- Live playground: `https://mnemos-production-2572.up.railway.app/`
+- **Coordination patterns:** revision blast radius, suspect gate,
+  reconsider. Memory changes what the agent may do, not just what it
+  says.
+- **Dynamic storage:** dream (review-gated consolidation), rewind (time
+  travel with diff), pulse (proactive queue), owner profile (curated
+  summary).
+- **Tamper-evident journal:** chained SHA-256 seal.
+- **Memory-gated payments:** a remembered delivered agreement is the
+  only thing that authorizes money.
 
 ## Honest limits
 
-- No vector/semantic search. Recall uses Sibyl FTS plus a deterministic
-  lexical fallback, on purpose.
-- No production authentication on the hosted endpoint. It is a demo surface.
-- The hosted memory is shared across visitors, wiped per page load.
-- No distributed multi-agent propagation; keepsakes carry state between
-  agents.
-- Revision is a user-issued command; no auth layer beyond the journal.
+- Recall is FTS plus a deterministic fallback; the optional hybrid
+  embedder is off by default and behind an env flag.
+- The hosted surface has no authentication; device isolation is by
+  browser id, not credentials.
+- Single-agent memory: no multi-agent shared store yet.
+- Revision is user-issued; nothing rewrites memory on its own except
+  the review-gated proposals.
+
+> Build for a reviewer who will click around without you in the room.

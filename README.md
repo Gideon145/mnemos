@@ -10,8 +10,11 @@ take it anywhere.
 ![Mnemos banner](docs/images/banner.jpg)
 
 <p align="center">
+  <a href="https://trymnemos.xyz/">
+    <img src="https://img.shields.io/badge/LIVE-trymnemos.xyz-3CB878?style=for-the-badge" alt="Live playground" />
+  </a>
   <a href="https://mnemos-production-2572.up.railway.app/">
-    <img src="https://img.shields.io/badge/LIVE-playground-3CB878?style=for-the-badge" alt="Live playground" />
+    <img src="https://img.shields.io/badge/backend-Railway-f24e1e?style=for-the-badge" alt="Backend" />
   </a>
   <a href="https://mnemos-production-2572.up.railway.app/mcp">
     <img src="https://img.shields.io/badge/MCP-hosted_endpoint-0f766e?style=for-the-badge" alt="Hosted MCP" />
@@ -193,7 +196,7 @@ the same memory always produces the same result.
 
 ## Use Mnemos from any agent (MCP)
 
-`mnemos mcp` serves the same 16 tools (remember, ask, lessons, tasks, replay,
+`mnemos mcp` serves the same 17 tools (remember, ask, lessons, tasks, replay,
 revise, blast, reconsider, suspect, reset, dream, rewind, pulse, owner, and
 more) to any MCP client over stdio.
 
@@ -222,19 +225,22 @@ endpoints: [Railway](https://mnemos-production-2572.up.railway.app/mcp) and
 
 ## Endpoints
 
-The hosted app at https://mnemos-production-2572.up.railway.app serves
-everything:
+The frontend runs on Vercel at https://trymnemos.xyz, with the same
+site served from the Railway backend as an always-on fallback. The
+backend serves everything:
 
 | Path | What |
 |---|---|
-| `/` | The live playground site |
+| `/` | The live playground site (fallback copy) |
 | `/chat` | Agentic chat. Facts are extracted and stored before the model answers |
-| `/mcp` | Streamable HTTP MCP: 16 tools with typed outputs |
+| `/mcp` | Streamable HTTP MCP: 17 tools with typed outputs |
 | `/assets` `/css` `/js` | Static site assets |
 
-CORS is open on the hosted app, the MCP client reconnects automatically
-on session expiry, and `mnemos mcp` runs the same surface over stdio
-locally.
+Each browser gets a private store: a device id scopes every tool call,
+so visitors never see each other's memory and reopening the page keeps
+yours. CORS is open on the hosted app, the MCP client reconnects
+automatically on session expiry, and `mnemos mcp` runs the same surface
+over stdio locally.
 
 ## Install
 
@@ -274,7 +280,7 @@ site in under two minutes.
 ## Testing
 
 ```bash
-python -m pytest tests -q      # 138 passing
+python -m pytest tests -q      # 147 passing
 ```
 
 | Suite | Tests | Focus |
@@ -424,7 +430,7 @@ you / any MCP client
 
 ```
 core/
-  mcp.py                16 tools, agentic chat, static site server
+  mcp.py                17 tools, agentic chat, static site server
   cli.py                the command line surface
   agent/
     recall.py           FTS + lexical recall, honest empty answer
@@ -455,7 +461,7 @@ core/
     virtuals.py         Virtuals registration and dispatch, memory write-back
 scripts/                 ablation, evidence capture, deploy checks
 site/                    the static playground site
-tests/                   138 tests
+tests/                   147 tests
 docs/                    all the supplemental docs
 ```
 
@@ -484,7 +490,7 @@ tests.
 
 | Area | Status | Proof |
 |---|---|---|
-| Memory core, recall, gate, lessons, tasks, revision | shipped, 138 tests green | `pytest` |
+| Memory core, recall, gate, lessons, tasks, revision | shipped, 147 tests green | `pytest` |
 | Base mainnet payment from a gated decision | verified live | `docs/VERIFICATION.md` |
 | Virtuals ACP dispatch | verified live, billed | `docs/VERIFICATION.md` |
 | Hosted MCP endpoint, Smithery, Railway | live | badges above |
@@ -492,8 +498,9 @@ tests.
 | Tamper-evident journal seal | shipped | `mnemos seal`, `mnemos doctor` |
 | Pending payment claims | shipped | `tests/test_payments.py` |
 | Measured ablation numbers | shipped, seeded | `scripts/ablation.py` |
-| Dream, rewind, entities, optional hybrid search | shipped, 138 tests green | `mnemos dream`, `mnemos rewind`, `mnemos entities`, `mnemos embed` |
-| Pulse, owner profile | shipped, 138 tests green | `mnemos pulse`, `mnemos owner` |
+| Dream, rewind, entities, optional hybrid search | shipped, 147 tests green | `mnemos dream`, `mnemos rewind`, `mnemos entities`, `mnemos embed` |
+| Pulse, owner profile | shipped, 147 tests green | `mnemos pulse`, `mnemos owner` |
+| Per-device private stores | shipped, survives reopen | `tests/test_mcp.py`, playground on trymnemos.xyz |
 | Demo video | pending | script in `docs/DEMO_SCRIPT.md` |
 | Semantic/vector search | deliberately not shipped | recall is FTS + deterministic fallback |
 | Production auth on the hosted endpoint | deliberately not claimed | demo surface |
