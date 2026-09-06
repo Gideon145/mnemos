@@ -529,15 +529,31 @@ def _change_intents(text: str) -> list[tuple[str, str]]:
 
 
 def _apply_change_intents(store: MemoryStore, user_text: str) -> int:
-    """Revise the matching active preference for every change intent.
+    """Revise the matching active entity for every change intent.
 
     A pronoun subject ("change it to dark coffee") resolves against the
     words of the new value, so the preference about coffee is the one
-    that gets revised. Deterministic: no model decides the match.
+    that gets revised. A name subject revises the user's identity.
+    Deterministic: no model decides the match.
     """
     applied = 0
     for subject, new_value in _change_intents(user_text):
         tokens = [word for word in subject.split() if len(word) > 2]
+        if "name" in subject.split():
+            for record in store.list_durable("identity"):
+                name = record.get("name")
+                if name in ("dream_cursor", "pulse_suppress"):
+                    continue
+                revise_memory(
+                    store,
+                    "identity",
+                    name,
+                    new_value,
+                    reason="chat correction",
+                )
+                applied += 1
+                break
+            continue
         if not tokens:
             tokens = [word for word in new_value.split() if len(word) > 2]
         if not tokens:

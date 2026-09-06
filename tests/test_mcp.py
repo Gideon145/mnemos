@@ -192,3 +192,13 @@ def test_change_intent_leaves_unrelated_facts_alone():
     applied = mcp._apply_change_intents(_scoped_store(), "change it to dark coffee")
 
     assert applied == 0
+
+
+def test_change_intent_revises_the_name():
+    mcp.remember("john", category="identity")
+
+    applied = mcp._apply_change_intents(_scoped_store(), "change my name to danny")
+
+    assert applied == 1
+    record = _scoped_store().recall_durable("identity", "john")
+    assert record["body"]["value"] == "danny"
