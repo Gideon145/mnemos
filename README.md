@@ -59,6 +59,7 @@ reproduction steps: [docs/VERIFICATION.md](docs/VERIFICATION.md).
 - [Verified live](#verified-live)
 - [Why](#why)
 - [What memory improves](#what-memory-improves)
+- [How memory made this possible](#how-memory-made-this-possible)
 - [What it does](#what-it-does)
 - [How it learns](#how-it-learns)
 - [Use Mnemos from any agent (MCP)](#use-mnemos-from-any-agent-mcp)
@@ -80,7 +81,8 @@ reproduction steps: [docs/VERIFICATION.md](docs/VERIFICATION.md).
 
 - ⚖️ [Judge Guide](docs/JUDGE_GUIDE.md): 5-minute review, every claim mapped to file, test, and live artifact
 - ✅ [Verification](docs/VERIFICATION.md): Base mainnet tx + Virtuals ACP proof, reproducible
-- 🏛️ [Architecture](docs/ARCHITECTURE.md): full system design and data flow
+- � [Demo Script](docs/DEMO_SCRIPT.md): the 2 to 5 minute demo, beat by beat
+- �🏛️ [Architecture](docs/ARCHITECTURE.md): full system design and data flow
 - 🧠 [Memory Model](docs/MEMORY_MODEL.md): entities, journals, gates
 - 📈 [PMF](docs/PMF.md): why Mnemos has to exist
 - ⏮️ [Prior Work](docs/PRIOR_WORK.md): prior work declaration
@@ -119,6 +121,16 @@ Memory is not the feature. What memory changes is the feature.
   keep paying out.
 - **Time.** Tasks survive restarts and `resume` lists what is left, so
   work never dies with the session.
+
+## How memory made this possible
+
+Delete Sibyl Memory and none of the above survives: recall empties, the
+payment gate closes, revisions stop propagating, and the journal seal
+breaks. The only copy of every fact, agreement, lesson, and task lives
+in the store; there is no in-process fallback. `mnemos doctor` deletes
+a throwaway database and shows the system fails closed, and the
+load-bearing map below points to every write and read a judge can check
+in under two minutes.
 
 ## What it does
 
