@@ -21,7 +21,11 @@ from mcp.types import Icon
 from .agent import RecallEngine
 from .agent.recap import recap
 from .agent.replay import replay as replay_memory
+from .memory.dream import dream as dream_memory
+from .memory.dream import pending as dream_pending
+from .memory.entities import annotate
 from .memory.lessons import learn
+from .memory.rewind import rewind as rewind_memory
 from .memory.revision import (
     blast_radius as blast_radius_memory,
     is_suspect as is_suspect_memory,
@@ -73,6 +77,7 @@ def _store() -> MemoryStore:
 class RememberResult:
     category: str
     name: str
+    created_at: str = ""
 
 
 @dataclass
@@ -154,11 +159,17 @@ def remember(text: str, category: str = "preference") -> RememberResult:
     store = _store()
     try:
         store.remember_durable(category, text, {"value": text})
+        annotate(store, category, text, text)
+        record = store.recall_durable(category, text)
         store.record_event(
             evaluated={"category": category, "name": text},
             acted=[f"remembered {category} {text[:60]}"],
         )
-        return RememberResult(category=category, name=text)
+        return RememberResult(
+            category=category,
+            name=text,
+            created_at=str((record or {}).get("created_at") or ""),
+        )
     finally:
         store.close()
 
@@ -329,6 +340,59 @@ def reset() -> ResetResult:
                 cleared += 1
         store.record_event(acted=[f"reset memory: {cleared} entities cleared"])
         return ResetResult(cleared=cleared)
+    finally:
+        store.close()
+
+
+@dataclass
+class DreamResult:
+    events_scanned: int
+    proposals: list[str] = field(default_factory=list)
+    pending: list[str] = field(default_factory=list)
+
+
+@dataclass
+class RewindResult:
+    at: str
+    entities: int
+    changed_count: int
+    changed: list[dict[str, str]] = field(default_factory=list)
+
+
+@server.tool(structured_output=True)
+def dream(min_hits: int = 2) -> DreamResult:
+    """Consolidate the journal into review-gated proposals. Nothing applies itself."""
+    store = _store()
+    try:
+        report = dream_memory(store, min_hits=min_hits)
+        return DreamResult(
+            events_scanned=int(report["events_scanned"]),
+            proposals=list(report["proposals"]),
+            pending=[str(r.get("name")) for r in dream_pending(store)],
+        )
+    finally:
+        store.close()
+
+
+@server.tool(structured_output=True)
+def rewind(at: str) -> RewindResult:
+    """Memory state at a past timestamp, with the diff to now."""
+    store = _store()
+    try:
+        result = rewind_memory(store, at)
+        return RewindResult(
+            at=at,
+            entities=len(result["entities"]),
+            changed_count=int(result["changed_count"]),
+            changed=[
+                {
+                    "entity": f"{item['category']}:{item['name']}",
+                    "at": str(item["at"]),
+                    "now": str(item["now"]),
+                }
+                for item in result["changed"]
+            ],
+        )
     finally:
         store.close()
 

@@ -16,10 +16,17 @@ from .integrations import register_with_virtuals
 from .integrations.virtuals import dispatch_to_virtuals
 from .memory.agreement import Agreement, AgreementError
 from .memory.doctor import run_doctor
+from .memory.dream import apply as dream_apply
+from .memory.dream import dream as run_dream
+from .memory.dream import pending as dream_pending
+from .memory.dream import reject as dream_reject
+from .memory.embed import HTTPEmbedder, HashEmbedder, embed_store, enabled as embed_enabled
+from .memory.entities import annotate, index as entity_index
 from .memory.keepsake import export_keepsake, import_keepsake
 from .memory.handoff import handoff
 from .memory.lessons import SEVERITIES, learn, lessons, resolve
 from .memory.links import link
+from .memory.rewind import rewind
 from .memory.tasks import Task, TaskError, unfinished
 from .payments import BaseExecutor, DryRunExecutor, pay
 from .memory.reflection import accept as accept_proposal
@@ -183,6 +190,26 @@ def build_parser() -> argparse.ArgumentParser:
     reflect.add_argument("--since", default=None)
     reflect.add_argument("--min-hits", type=int, default=2)
 
+    dream = sub.add_parser("dream", help="consolidate the journal into review-gated proposals")
+    dream.add_argument("--list", action="store_true", dest="list_only", help="list pending dream proposals")
+    dream.add_argument("--apply", dest="apply_name", default=None, help="promote a proposal to an active lesson")
+    dream.add_argument("--reject", dest="reject_name", default=None, help="archive a proposal")
+    dream.add_argument("--min-hits", type=int, default=2)
+
+    rewind_cmd = sub.add_parser("rewind", help="memory state at a past moment, with the diff to now")
+    rewind_cmd.add_argument("--at", required=True, help="ISO timestamp to rewind to")
+
+    entities_cmd = sub.add_parser("entities", help="the deterministic entity index")
+
+    embed_cmd = sub.add_parser(
+        "embed", help="attach vectors to facts (optional; requires env or --hash)"
+    )
+    embed_cmd.add_argument(
+        "--hash",
+        action="store_true",
+        help="use the deterministic hash embedder (offline demo)",
+    )
+
     proposals = sub.add_parser("proposals", help="list pending proposals")
 
     accept = sub.add_parser("accept", help="promote a proposal to an active preference")
@@ -203,11 +230,14 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "remember":
             name = _slug(args.text)
             store.remember_durable(args.category, name, {"value": args.text})
+            found = annotate(store, args.category, name, args.text)
             store.record_event(
                 evaluated={"category": args.category, "name": name},
                 acted=[f"remembered {args.category} {name}"],
             )
             print(f"remembered {args.category} {name}")
+            if found:
+                print(f"entities: {', '.join(found)}")
             return 0
 
         if args.command == "ask":
@@ -539,6 +569,84 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"no proposal named {args.name!r}")
                 return 1
             print(f"rejected {args.name}")
+            return 0
+
+        if args.command == "dream":
+            if args.apply_name:
+                lesson = dream_apply(store, args.apply_name)
+                if lesson is None:
+                    print(f"no dream proposal named {args.apply_name!r}")
+                    return 1
+                print(f"applied {args.apply_name} as lesson {lesson.get('name')}")
+                return 0
+            if args.reject_name:
+                if not dream_reject(store, args.reject_name):
+                    print(f"no dream proposal named {args.reject_name!r}")
+                    return 1
+                print(f"rejected {args.reject_name}")
+                return 0
+            if args.list_only:
+                records = dream_pending(store)
+                for record in records:
+                    body = record.get("body") or {}
+                    print(
+                        f"  {record.get('name')} ({body.get('kind')}): "
+                        f"{body.get('value', '')}"
+                    )
+                if not records:
+                    print("(no dream proposals)")
+                return 0
+            report = run_dream(store, min_hits=args.min_hits)
+            print(
+                f"dreamed over {report['events_scanned']} new journal events, "
+                f"wrote {len(report['proposals'])} proposals"
+            )
+            for name in report["proposals"]:
+                print(f"  {name}")
+            return 0
+
+        if args.command == "rewind":
+            result = rewind(store, args.at)
+            print(
+                f"memory at {args.at}: {len(result['entities'])} entities, "
+                f"{result['changed_count']} changed since"
+            )
+            for change in result["changed"]:
+                print(
+                    f"  {change['category']} {change['name']}: "
+                    f"{change['at']} -> {change['now']}"
+                )
+            if not result["changed"]:
+                print("  nothing changed since")
+            return 0
+
+        if args.command == "entities":
+            aggregated = entity_index(store)
+            for entity, facts in sorted(aggregated.items()):
+                print(f"  {entity}: {', '.join(facts)}")
+            if not aggregated:
+                print("(no entities indexed)")
+            return 0
+
+        if args.command == "embed":
+            if args.hash:
+                embedder = HashEmbedder()
+            elif embed_enabled():
+                import os
+
+                embedder = HTTPEmbedder(
+                    os.environ["MNEMOS_EMBED_BASE_URL"],
+                    os.environ["MNEMOS_EMBED_API_KEY"],
+                    os.environ["MNEMOS_EMBED_MODEL"],
+                )
+            else:
+                print(
+                    "embedder not configured: set MNEMOS_EMBED_BASE_URL, "
+                    "MNEMOS_EMBED_API_KEY, and MNEMOS_EMBED_MODEL, or pass --hash"
+                )
+                return 1
+            summary = embed_store(store, embedder)
+            print(f"embedded {summary['embedded']} entities ({embedder.name})")
             return 0
 
         parser.error(f"unknown command {args.command!r}")
