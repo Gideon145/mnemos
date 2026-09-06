@@ -25,6 +25,8 @@ from .memory.dream import dream as dream_memory
 from .memory.dream import pending as dream_pending
 from .memory.entities import annotate
 from .memory.lessons import learn
+from .memory.owner import owner_profile
+from .memory.pulse import decline, pulse as pulse_memory
 from .memory.rewind import rewind as rewind_memory
 from .memory.revision import (
     blast_radius as blast_radius_memory,
@@ -359,6 +361,23 @@ class RewindResult:
     changed: list[dict[str, str]] = field(default_factory=list)
 
 
+@dataclass
+class PulseResult:
+    matter: str = ""
+    matter_id: str = ""
+    queued: int = 0
+
+
+@dataclass
+class OwnerResult:
+    profile: str
+    identity: int
+    preferences: int
+    principles: int
+    agreements: int
+    vetoes: int
+
+
 @server.tool(structured_output=True)
 def dream(min_hits: int = 2) -> DreamResult:
     """Consolidate the journal into review-gated proposals. Nothing applies itself."""
@@ -392,6 +411,51 @@ def rewind(at: str) -> RewindResult:
                 }
                 for item in result["changed"]
             ],
+        )
+    finally:
+        store.close()
+
+
+@server.tool(structured_output=True)
+def pulse() -> PulseResult:
+    """Raise the most urgent matter memory is holding, at most one per tick."""
+    store = _store()
+    try:
+        result = pulse_memory(store)
+        matter = result["matter"] or {}
+        return PulseResult(
+            matter=str(matter.get("text") or ""),
+            matter_id=str(matter.get("id") or ""),
+            queued=int(result["queued"]),
+        )
+    finally:
+        store.close()
+
+
+@server.tool(structured_output=True)
+def pulse_decline(matter_id: str) -> PulseResult:
+    """Suppress a pulse matter id so it never returns."""
+    store = _store()
+    try:
+        decline(store, matter_id)
+        return PulseResult(matter_id=matter_id)
+    finally:
+        store.close()
+
+
+@server.tool(structured_output=True)
+def owner() -> OwnerResult:
+    """The curated owner profile: identity, preferences, principles, agreements."""
+    store = _store()
+    try:
+        result = owner_profile(store)
+        return OwnerResult(
+            profile=str(result["profile"]),
+            identity=int(result["identity"]),
+            preferences=int(result["preferences"]),
+            principles=int(result["principles"]),
+            agreements=int(result["agreements"]),
+            vetoes=int(result["vetoes"]),
         )
     finally:
         store.close()

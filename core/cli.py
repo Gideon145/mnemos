@@ -26,6 +26,9 @@ from .memory.keepsake import export_keepsake, import_keepsake
 from .memory.handoff import handoff
 from .memory.lessons import SEVERITIES, learn, lessons, resolve
 from .memory.links import link
+from .memory.owner import owner_profile
+from .memory.pulse import decline as decline_matter
+from .memory.pulse import pulse
 from .memory.rewind import rewind
 from .memory.tasks import Task, TaskError, unfinished
 from .payments import BaseExecutor, DryRunExecutor, pay
@@ -209,6 +212,18 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="use the deterministic hash embedder (offline demo)",
     )
+
+    pulse_cmd = sub.add_parser(
+        "pulse", help="raise the most urgent matter memory is holding"
+    )
+    pulse_cmd.add_argument(
+        "--decline",
+        dest="decline_id",
+        default=None,
+        help="suppress a matter id so it never returns",
+    )
+
+    owner = sub.add_parser("owner", help="print the curated owner profile")
 
     proposals = sub.add_parser("proposals", help="list pending proposals")
 
@@ -647,6 +662,25 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             summary = embed_store(store, embedder)
             print(f"embedded {summary['embedded']} entities ({embedder.name})")
+            return 0
+
+        if args.command == "pulse":
+            if args.decline_id:
+                decline_matter(store, args.decline_id)
+                print(f"declined {args.decline_id}")
+                return 0
+            result = pulse(store)
+            matter = result["matter"]
+            if matter is None:
+                print("pulse: nothing queued")
+            else:
+                print(f"pulse: {matter['text']}  [{matter['id']}]")
+                print(f"({result['queued']} matter(s) queued)")
+            return 0
+
+        if args.command == "owner":
+            result = owner_profile(store)
+            print(result["profile"])
             return 0
 
         parser.error(f"unknown command {args.command!r}")
