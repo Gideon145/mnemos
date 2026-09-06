@@ -57,9 +57,31 @@ reproduction steps: [docs/VERIFICATION.md](docs/VERIFICATION.md).
 | Base | The payment gate read a remembered agreement, refused it while the agreement was not delivered, then executed it once delivered | [mainnet tx `0x1ed5b2...46d194`](https://basescan.org/tx/0x1ed5b2674123e70a4de87ca9ceebad38f961fc6612c2206bb1456356ae46d194), Sep 5, status 1 |
 | Virtuals | ACP compute dispatch from a remembered console agent id on `compute.virtuals.io/v1` | `anthropic/claude-fable-5`, response `gen-1788586150-...`, 256 tokens, $0.01104 billed |
 
+## Building in public
+
+One post per build day on X at [@mnemos_agent](https://x.com/mnemos_agent),
+each claiming only what was live and verified that day. Full thread, oldest
+first:
+
+| When | Post | Shipped that day |
+|---|---|---|
+| Aug 29 | [Every AI assistant has amnesia](https://x.com/mnemos_agent/status/2093702729516343772) | the problem stated: agents forget between sessions |
+| Sep 1 | [Day 1, an agent that remembers](https://x.com/mnemos_agent/status/2094635080257868128) | durable facts on Sibyl, `remember` / `ask`, honest empty answers |
+| Sep 2 | [What if your agent remembered its failures](https://x.com/mnemos_agent/status/2094996926517092619) | lessons as durable entities with severity |
+| Sep 2 | [RAM held computers back](https://x.com/mnemos_agent/status/2095084840852840580) | zero-token recall, FTS over the durable tier |
+| Sep 4 | [It learned to learn from pain](https://x.com/mnemos_agent/status/2095726174433325315) | a high severity lesson vetoes linked payments |
+| Sep 5 | [Your agent corrected a wrong fact today](https://x.com/mnemos_agent/status/2096104331594399947) | the revision gate: revise, blast radius, suspect |
+| Sep 5 | [Sibyl's reply](https://x.com/sibylcap/status/2096360556244435138) | the gate's tedious part, called out by the sponsor |
+| Sep 6 | [The gates are open](https://x.com/mnemos_agent/status/2096512756631454011) | trymnemos.xyz, live waitlist and usage stats, per-device memory, Claude bridge |
+
+The money milestone is on-chain, in the table above: the gate refused a
+payment while the agreement was only agreed, then executed it once
+delivered, Sep 5 on Base mainnet.
+
 ## Table of Contents
 
 - [Verified live](#verified-live)
+- [Building in public](#building-in-public)
 - [Why](#why)
 - [What memory improves](#what-memory-improves)
 - [How memory made this possible](#how-memory-made-this-possible)
@@ -77,7 +99,6 @@ reproduction steps: [docs/VERIFICATION.md](docs/VERIFICATION.md).
 - [Project layout](#project-layout)
 - [Invariants](#invariants)
 - [Honest status](#honest-status)
-- [Building in public](#building-in-public)
 - [License](#license)
 
 ### Supplemental docs
@@ -506,14 +527,6 @@ tests.
 | Demo video | pending | script in `docs/DEMO_SCRIPT.md` |
 | Semantic/vector search | deliberately not shipped | recall is FTS + deterministic fallback |
 | Production auth on the hosted endpoint | deliberately not claimed | demo surface |
-
-## Building in public
-
-One post per build day on X at
-[@mnemos_agent](https://x.com/mnemos_agent), each pointing at what
-shipped that day. The ground rule is the same as the README: a post
-claims only what is live and verified, and links the live playground
-and the hosted MCP.
 
 ## License
 
