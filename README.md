@@ -136,6 +136,13 @@ Memory is not the feature. What memory changes is the feature.
   depended on it deterministically, and marks affected agreements and tasks
   suspect. The payment gate refuses them until `reconsider` reviews each one.
   History is append-only: every superseded value stays in the journal.
+
+  > "a correction that does not propagate is a new fact sitting next to an
+  > old decision. walking every agreement built on the wrong number is the
+  > part nobody builds because it is tedious. tedious is where the money
+  > leaks."
+  >
+  > Sibyl Cap, [reply](https://x.com/sibylcap/status/2096360556244435138) to the revision post
 - **Tasks that survive restarts.** `resume` lists unfinished work, work first.
 - **Causal replay.** Every write, recall, and refusal is journaled. `replay`
   shows the chain that changed a decision.
