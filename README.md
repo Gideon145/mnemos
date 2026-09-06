@@ -60,6 +60,7 @@ reproduction steps: [docs/VERIFICATION.md](docs/VERIFICATION.md).
 - [Why](#why)
 - [What memory improves](#what-memory-improves)
 - [What it does](#what-it-does)
+- [How it learns](#how-it-learns)
 - [Use Mnemos from any agent (MCP)](#use-mnemos-from-any-agent-mcp)
 - [Endpoints](#endpoints)
 - [Install](#install)
@@ -149,6 +150,16 @@ Memory is not the feature. What memory changes is the feature.
 - **Tasks that survive restarts.** `resume` lists unfinished work, work first.
 - **Causal replay.** Every write, recall, and refusal is journaled. `replay`
   shows the chain that changed a decision.
+- **The deletion test, on demand.** `doctor` proves memory is load-bearing,
+  and reports hygiene: duplicates, stale facts, and the token budget of the
+  hot set.
+
+## How it learns
+
+Memory does not sit still. The agent consolidates, travels through time,
+and raises what needs attention. Every mechanism below is deterministic:
+the same memory always produces the same result.
+
 - **Dream.** Background consolidation over the journal. Repeated patterns,
   unanswered questions, and refused payments become review-gated proposals.
   `mnemos dream`, then `--apply` or `--reject`. Nothing applies itself.
@@ -167,9 +178,6 @@ Memory is not the feature. What memory changes is the feature.
 - **Owner profile.** A curated summary of who you are: identity,
   preferences, accepted principles, standing agreements, and lessons that
   still veto. `mnemos owner`. Not a raw history dump.
-- **The deletion test, on demand.** `doctor` proves memory is load-bearing,
-  and reports hygiene: duplicates, stale facts, and the token budget of the
-  hot set.
 
 ## Use Mnemos from any agent (MCP)
 
