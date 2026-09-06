@@ -550,6 +550,9 @@ html.js .reveal.in {
 .hint a { color: var(--teal); text-decoration: none; }
 .hint a:hover { text-decoration: underline; }
 .pg-private { color: var(--muted); font-size: 0.8rem; margin: 0; }
+.pg-device { color: var(--muted); font-size: 0.78rem; margin: 6px 0 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pg-device span { color: var(--teal); word-break: break-all; }
+.pg-device .btn { font-size: 0.72rem; padding: 4px 10px; }
 .waitlist-count { color: var(--teal); font-size: 0.85rem; margin-top: 10px; }
 .copy-btn {
   align-self: flex-start;

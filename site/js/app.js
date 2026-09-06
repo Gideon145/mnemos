@@ -28,6 +28,23 @@ const form = document.getElementById("pg-form");
 const input = document.getElementById("pg-text");
 const status = document.getElementById("pg-status");
 
+// Show the device id so the same memory can be opened from another
+// surface, like Claude with the hosted MCP.
+const deviceIdEl = document.getElementById("pg-device-id");
+if (deviceIdEl) deviceIdEl.textContent = deviceId;
+const deviceCopyBtn = document.getElementById("pg-device-copy");
+if (deviceCopyBtn) {
+  deviceCopyBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(deviceId);
+      deviceCopyBtn.textContent = "Copied";
+      setTimeout(() => (deviceCopyBtn.textContent = "Copy"), 1500);
+    } catch {
+      deviceCopyBtn.textContent = "Blocked";
+    }
+  });
+}
+
 let sessionId = null;
 let nextId = 1;
 let ready = false;
