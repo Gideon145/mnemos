@@ -499,6 +499,8 @@ footer {
   color: var(--teal);
 }
 .hint { color: var(--muted); font-size: 0.9rem; }
+.hint a { color: var(--teal); text-decoration: none; }
+.hint a:hover { text-decoration: underline; }
 .copy-btn {
   align-self: flex-start;
   background: var(--teal-dim);
