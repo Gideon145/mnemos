@@ -121,6 +121,9 @@ Memory is not the feature. What memory changes is the feature.
 
 ## What it does
 
+- **Layered memory.** Persistent for durable facts and preferences, daily
+  for the journal in time order, discussion for the working set of the
+  current turn. Recall reads them in that priority, grounded first.
 - **Remembers you, honestly.** Recall answers only from what memory actually
   holds, and says so when it holds nothing. No invented memories, ever.
 - **Agreements with teeth.** A state machine (`draft -> agreed -> delegated ->
@@ -156,15 +159,23 @@ Memory is not the feature. What memory changes is the feature.
   `mnemos entities` prints the index. Zero model calls.
 - **Hybrid search, optional.** FTS first, semantic assist when you bring an
   embedding key. `mnemos embed --hash` for the offline demo. Off by default.
+- **Pulse.** A bounded proactive queue grounded in memory. The most urgent
+  matter surfaces (a suspect entity the gate refuses, an unresolved
+  high-severity lesson, a blocked task, a pending dream proposal), one per
+  tick. `mnemos pulse`, `mnemos pulse --decline <id>` suppresses a nudge
+  forever.
+- **Owner profile.** A curated summary of who you are: identity,
+  preferences, accepted principles, standing agreements, and lessons that
+  still veto. `mnemos owner`. Not a raw history dump.
 - **The deletion test, on demand.** `doctor` proves memory is load-bearing,
   and reports hygiene: duplicates, stale facts, and the token budget of the
   hot set.
 
 ## Use Mnemos from any agent (MCP)
 
-`mnemos mcp` serves the same 14 tools (remember, ask, lessons, tasks, replay,
-revise, blast, reconsider, suspect, reset, dream, rewind, and more) to any
-MCP client over stdio.
+`mnemos mcp` serves the same 16 tools (remember, ask, lessons, tasks, replay,
+revise, blast, reconsider, suspect, reset, dream, rewind, pulse, owner, and
+more) to any MCP client over stdio.
 
 ```bash
 pip install '.[mcp]'
@@ -198,7 +209,7 @@ everything:
 |---|---|
 | `/` | The live playground site |
 | `/chat` | Agentic chat. Facts are extracted and stored before the model answers |
-| `/mcp` | Streamable HTTP MCP: 14 tools with typed outputs |
+| `/mcp` | Streamable HTTP MCP: 16 tools with typed outputs |
 | `/assets` `/css` `/js` | Static site assets |
 
 CORS is open on the hosted app, the MCP client reconnects automatically
@@ -234,6 +245,8 @@ site in under two minutes.
 | Rewind | `mnemos rewind --at` | `core/memory/rewind.py` |
 | Entities | `mnemos entities`, recall boost | `core/memory/entities.py` |
 | Hybrid search | `mnemos embed` | `core/memory/embed.py` |
+| Pulse | `mnemos pulse` / `--decline` | `core/memory/pulse.py` |
+| Owner profile | `mnemos owner` | `core/memory/owner.py` |
 | Revision | `mnemos revise` / `blast` / `reconsider` / `suspect` | `core/memory/revision.py` |
 | MCP surface | `mnemos mcp` | `core/mcp.py` |
 | Deletion test | `mnemos doctor` | `core/memory/doctor.py` |
@@ -241,7 +254,7 @@ site in under two minutes.
 ## Testing
 
 ```bash
-python -m pytest tests -q      # 130 passing
+python -m pytest tests -q      # 138 passing
 ```
 
 | Suite | Tests | Focus |
@@ -265,6 +278,8 @@ python -m pytest tests -q      # 130 passing
 | `test_embed` | 4 | optional hybrid recall, deterministic hash embedder |
 | `test_seal` | 4 | journal seal, deletions break the chain |
 | `test_rewind` | 3 | value reconstruction across a revision |
+| `test_pulse` | 4 | proactive queue, decline suppression |
+| `test_owner` | 4 | curated profile, deterministic, principles |
 | `test_delegation` | 3 | handing work to another agent, remembered |
 | `test_doctor` | 2 | the deletion test, on demand |
 | `test_handoff` | 2 | give another agent your memory, on purpose |
@@ -389,7 +404,7 @@ you / any MCP client
 
 ```
 core/
-  mcp.py                14 tools, agentic chat, static site server
+  mcp.py                16 tools, agentic chat, static site server
   cli.py                the command line surface
   agent/
     recall.py           FTS + lexical recall, honest empty answer
@@ -412,13 +427,15 @@ core/
     rewind.py           memory state at any past moment
     entities.py         deterministic extraction and recall boost
     embed.py            optional hybrid recall behind a flag
+    pulse.py            bounded proactive queue, one matter per tick
+    owner.py            curated owner profile
   payments/
     executor.py         dry-run and Base executors, claim-before-broadcast
   integrations/
     virtuals.py         Virtuals registration and dispatch, memory write-back
 scripts/                 ablation, evidence capture, deploy checks
 site/                    the static playground site
-tests/                   130 tests
+tests/                   138 tests
 docs/                    all the supplemental docs
 ```
 
@@ -439,13 +456,15 @@ tests.
 - A dream proposal never applies itself: it becomes a lesson only through
   an explicit apply.
 - Rewind answers only from recorded history and the journal.
+- Pulse raises at most one matter per tick, and a declined matter never
+  returns.
 - A keepsake pack restores a fresh agent on a fresh machine.
 
 ## Honest status
 
 | Area | Status | Proof |
 |---|---|---|
-| Memory core, recall, gate, lessons, tasks, revision | shipped, 130 tests green | `pytest` |
+| Memory core, recall, gate, lessons, tasks, revision | shipped, 138 tests green | `pytest` |
 | Base mainnet payment from a gated decision | verified live | `docs/VERIFICATION.md` |
 | Virtuals ACP dispatch | verified live, billed | `docs/VERIFICATION.md` |
 | Hosted MCP endpoint, Smithery, Railway | live | badges above |
@@ -453,7 +472,8 @@ tests.
 | Tamper-evident journal seal | shipped | `mnemos seal`, `mnemos doctor` |
 | Pending payment claims | shipped | `tests/test_payments.py` |
 | Measured ablation numbers | shipped, seeded | `scripts/ablation.py` |
-| Dream, rewind, entities, optional hybrid search | shipped, 130 tests green | `mnemos dream`, `mnemos rewind`, `mnemos entities`, `mnemos embed` |
+| Dream, rewind, entities, optional hybrid search | shipped, 138 tests green | `mnemos dream`, `mnemos rewind`, `mnemos entities`, `mnemos embed` |
+| Pulse, owner profile | shipped, 138 tests green | `mnemos pulse`, `mnemos owner` |
 | Demo video | pending | script in `docs/DEMO_SCRIPT.md` |
 | Semantic/vector search | deliberately not shipped | recall is FTS + deterministic fallback |
 | Production auth on the hosted endpoint | deliberately not claimed | demo surface |
