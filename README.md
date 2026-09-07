@@ -522,6 +522,7 @@ first:
 | Sep 5 | [Your agent corrected a wrong fact today](https://x.com/mnemos_agent/status/2096104331594399947) | the revision gate: revise, blast radius, suspect |
 | Sep 5 | [Sibyl's reply](https://x.com/sibylcap/status/2096360556244435138) | the gate's tedious part, called out by the sponsor |
 | Sep 6 | [The gates are open](https://x.com/mnemos_agent/status/2096512756631454011) | trymnemos.xyz, live waitlist and usage stats, per-device memory, Claude bridge |
+| Sep 7 | [The same request, refused then paid](https://x.com/mnemos_agent/status/2096980736544846236) | the gate story in one request: refused while only agreed, paid once delivered |
 
 The money milestone is on-chain, in the verified table up top: the gate
 refused a payment while the agreement was only agreed, then executed it
