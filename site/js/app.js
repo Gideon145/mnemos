@@ -248,6 +248,12 @@ async function runAction(action) {
     } else if (action === "revise") {
       addMsg("user", "Revise my contractor rate to 60 per hour.");
       showTyping();
+      // A fresh memory may not hold the fact yet. Store it first so the
+      // revision always has something to revise.
+      await callTool("remember", {
+        text: "my contractor rate is 40 per hour",
+        category: "preference",
+      });
       const out = await callTool("revise", {
         category: "preference",
         name: "my contractor rate is 40 per hour",
