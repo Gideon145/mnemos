@@ -84,14 +84,16 @@ Watch the 4 minute demo:
 - [Project layout](#project-layout)
 - [Invariants](#invariants)
 - [Honest status](#honest-status)
+- [Building in public](#building-in-public)
 - [License](#license)
 
 ### Supplemental docs
 
 - ⚖️ [Judge Guide](docs/JUDGE_GUIDE.md): 5-minute review, every claim mapped to file, test, and live artifact
 - ✅ [Verification](docs/VERIFICATION.md): Base mainnet tx + Virtuals ACP proof, reproducible
-
-- �🏛️ [Architecture](docs/ARCHITECTURE.md): full system design and data flow
+- 📘 [Build Log](docs/BUILD_LOG.md): day by day, linked to the public X posts
+- 📄 [Public Submission](docs/PUBLIC_SUBMISSION.md): the form answers with every claim mapped to code
+- 🏛️ [Architecture](docs/ARCHITECTURE.md): full system design and data flow
 - 🧠 [Memory Model](docs/MEMORY_MODEL.md): entities, journals, gates
 - 📈 [PMF](docs/PMF.md): why Mnemos has to exist
 - ⏮️ [Prior Work](docs/PRIOR_WORK.md): prior work declaration
@@ -171,9 +173,15 @@ in under two minutes.
 - **Tasks that survive restarts.** `resume` lists unfinished work, work first.
 - **Causal replay.** Every write, recall, and refusal is journaled. `replay`
   shows the chain that changed a decision.
+- **Linked entities.** `link` connects two durable entities both ways, and
+  recall walks the breadcrumbs to related facts.
+- **Handoff.** `handoff` gives another agent your memory on purpose, as a
+  signed pack, so delegation is a transfer of context, not a rewrite of it.
+- **Reflection.** `reflect` turns repeated journal patterns into proposed
+  preferences, reviewed before they stick. Nothing applies itself.
 - **The deletion test, on demand.** `doctor` proves memory is load-bearing,
-  and reports hygiene: duplicates, stale facts, and the token budget of the
-  hot set.
+  and reports nine hygiene checks: duplicates, stale facts, the token
+  budget of the hot set, the journal seal, and more.
 
 ## How it learns
 
@@ -217,9 +225,9 @@ Every claim here is deterministic and reproducible from a fresh session.
 
 ## Use Mnemos from any agent (MCP)
 
-`mnemos mcp` serves the same 17 tools (remember, ask, lessons, tasks, replay,
-revise, blast, reconsider, suspect, reset, dream, rewind, pulse, owner, and
-more) to any MCP client over stdio.
+`mnemos mcp` serves the same 17 tools (remember, ask, learn_lesson, task,
+resume, recap_day, replay, revise, blast, reconsider, suspect, reset,
+dream, rewind, pulse, pulse_decline, owner) to any MCP client over stdio.
 
 ```bash
 pip install '.[mcp]'
@@ -255,6 +263,8 @@ backend serves everything:
 | `/` | The live playground site (fallback copy) |
 | `/chat` | Agentic chat. Facts are extracted and stored before the model answers |
 | `/mcp` | Streamable HTTP MCP: 17 tools with typed outputs |
+| `/waitlist`, `/waitlist/count`, `/waitlist/list` | Live waitlist signups, count, and entries |
+| `/stats` | Live usage: devices, waitlist, facts in memory, recalls served, plus `?device=` for one device |
 | `/assets` `/css` `/js` | Static site assets |
 
 Each browser gets a private store: a device id scopes every tool call,
@@ -301,16 +311,17 @@ site in under two minutes.
 ## Testing
 
 ```bash
-python -m pytest tests -q      # 147 passing
+python -m pytest tests -q      # 153 passing
 ```
 
 | Suite | Tests | Focus |
 |---|---|---|
 | `test_revision` | 19 | blast radius, suspect gates, reconsider |
-| `test_mcp` | 14 | the 12 tools over stdio, fact extraction, reset |
+| `test_mcp` | 24 | the 17 tools, fact extraction, reset, device isolation |
 | `test_memory` | 10 | tiers, agreements, keepsakes, gates, deletion test |
 | `test_virtuals` | 9 | registration and dispatch, memory write-back |
 | `test_recall` | 7 | recall honesty, including the empty-memory case |
+| `test_waitlist` | 5 | signups, dedup, and the live count |
 | `test_payments` | 6 | pending claims, duplicate refusal, paid only on receipt |
 | `test_dream` | 6 | consolidation proposals, review gate, cursor safety |
 | `test_entities` | 6 | extraction, annotation, index, recall boost |
@@ -482,7 +493,7 @@ core/
     virtuals.py         Virtuals registration and dispatch, memory write-back
 scripts/                 ablation, evidence capture, deploy checks
 site/                    the static playground site
-tests/                   147 tests
+tests/                   153 tests
 docs/                    all the supplemental docs
 ```
 
@@ -511,7 +522,7 @@ tests.
 
 | Area | Status | Proof |
 |---|---|---|
-| Memory core, recall, gate, lessons, tasks, revision | shipped, 147 tests green | `pytest` |
+| Memory core, recall, gate, lessons, tasks, revision | shipped, 153 tests green | `pytest` |
 | Base mainnet payment from a gated decision | verified live | `docs/VERIFICATION.md` |
 | Virtuals ACP dispatch | verified live, billed | `docs/VERIFICATION.md` |
 | Hosted MCP endpoint, Smithery, Railway | live | badges above |
@@ -519,8 +530,8 @@ tests.
 | Tamper-evident journal seal | shipped | `mnemos seal`, `mnemos doctor` |
 | Pending payment claims | shipped | `tests/test_payments.py` |
 | Measured ablation numbers | shipped, seeded | `scripts/ablation.py` |
-| Dream, rewind, entities, optional hybrid search | shipped, 147 tests green | `mnemos dream`, `mnemos rewind`, `mnemos entities`, `mnemos embed` |
-| Pulse, owner profile | shipped, 147 tests green | `mnemos pulse`, `mnemos owner` |
+| Dream, rewind, entities, optional hybrid search | shipped, 153 tests green | `mnemos dream`, `mnemos rewind`, `mnemos entities`, `mnemos embed` |
+| Pulse, owner profile | shipped, 153 tests green | `mnemos pulse`, `mnemos owner` |
 | Per-device private stores | shipped, survives reopen | `tests/test_mcp.py`, playground on trymnemos.xyz |
 | Waitlist with a live verifiable count | live | `POST /waitlist`, `GET /waitlist/count` |
 | Playground usage | live, verifiable | `GET /stats` (distinct devices) |
