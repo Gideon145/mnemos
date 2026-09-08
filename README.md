@@ -557,6 +557,7 @@ first:
 | Sep 6 | [The gates are open](https://x.com/mnemos_agent/status/2096512756631454011) | trymnemos.xyz, live waitlist and usage stats, per-device memory, Claude bridge |
 | Sep 7 | [The same request, refused then paid](https://x.com/mnemos_agent/status/2096980736544846236) | the gate story in one request: refused while only agreed, paid once delivered |
 | Sep 8 | [Demo video](https://youtu.be/pjX8eSkhXQA) | the 4 minute walkthrough: teach, connect Claude, revise, the money |
+| Sep 8 | [Claude remembered](https://x.com/mnemos_agent/status/2097222015891488866) | the memory id bridge: Claude reads the playground's memory, context window empty |
 
 The money milestone is on-chain, in the verified table up top: the gate
 refused a payment while the agreement was only agreed, then executed it
