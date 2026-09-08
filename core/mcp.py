@@ -877,6 +877,10 @@ def run_server(http: bool = False) -> None:
         # The mounted MCP app owns the session manager, which only starts
         # inside its own lifespan. Compose it into the root lifespan.
         async with base.router.lifespan_context(base):
+            # One-time hygiene: drop test signups from the live waitlist.
+            from .waitlist import prune_test_entries
+
+            await run_in_threadpool(prune_test_entries, waitlist_path)
             yield
 
     site_dir = os.environ.get("SITE_DIR", "")

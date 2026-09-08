@@ -50,6 +50,23 @@ def count(path: str | Path) -> int:
     return len(_read(Path(path)))
 
 
+def prune_test_entries(path: str | Path) -> int:
+    """Remove throwaway example.com signups left from testing. Idempotent."""
+    target = Path(path)
+    with _LOCK:
+        rows = _read(target)
+        kept = [
+            entry
+            for entry in rows
+            if not str(entry.get("email", "")).endswith("@example.com")
+        ]
+        removed = len(rows) - len(kept)
+        if removed:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(json.dumps(kept, indent=1), encoding="utf-8")
+        return removed
+
+
 def entries(path: str | Path) -> list[dict]:
     """The full list, newest first. Emails only, no other data."""
     return list(reversed(_read(Path(path))))

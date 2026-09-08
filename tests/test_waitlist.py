@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from core.waitlist import add_email, count, entries
+from core.waitlist import add_email, count, entries, prune_test_entries
 
 
 def test_add_email_stores_and_counts(tmp_path):
@@ -38,3 +38,22 @@ def test_invalid_email_is_rejected(tmp_path):
 
 def test_missing_file_counts_zero(tmp_path):
     assert count(tmp_path / "nope.json") == 0
+
+
+def test_prune_removes_only_test_entries(tmp_path):
+    path = tmp_path / "waitlist.json"
+    add_email(path, "judge-test@example.com")
+    add_email(path, "real@domain.com")
+
+    removed = prune_test_entries(path)
+
+    assert removed == 1
+    assert [row["email"] for row in entries(path)] == ["real@domain.com"]
+
+
+def test_prune_is_idempotent(tmp_path):
+    path = tmp_path / "waitlist.json"
+    add_email(path, "real@domain.com")
+
+    assert prune_test_entries(path) == 0
+    assert count(path) == 1
