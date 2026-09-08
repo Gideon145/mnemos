@@ -71,6 +71,7 @@ Watch the 4 minute demo:
 - [How memory made this possible](#how-memory-made-this-possible)
 - [What it does](#what-it-does)
 - [How it learns](#how-it-learns)
+- [Memory primitives](#memory-primitives)
 - [Use Mnemos from any agent (MCP)](#use-mnemos-from-any-agent-mcp)
 - [Endpoints](#endpoints)
 - [Install](#install)
@@ -198,6 +199,21 @@ the same memory always produces the same result.
 - **Owner profile.** A curated summary of who you are: identity,
   preferences, accepted principles, standing agreements, and lessons that
   still veto. `mnemos owner`. Not a raw history dump.
+
+## Memory primitives
+
+Seven primitives, each mapped to a file and covered by the test suite.
+Every claim here is deterministic and reproducible from a fresh session.
+
+| Primitive | How Mnemos uses it | Where |
+|---|---|---|
+| Recall | FTS5 across every tier, zero model calls, and an honest empty answer when nothing matches | `core/agent/recall.py`, `ask` |
+| Entities | five durable categories with a status lifecycle, plus deterministic email and proper-noun indexing that boosts recall | `core/memory/store.py`, `core/memory/entities.py` |
+| Temporal / time-travel | `rewind` reconstructs the value every fact held at a past timestamp and diffs what changed since | `core/memory/rewind.py`, `rewind` |
+| Summarization | `recap_day` summarizes the day, and the owner profile curates identity and preferences into a short profile | `core/agent/recap.py`, `core/memory/owner.py` |
+| Reflection | dream proposals over the journal, review-gated by the owner. nothing applies itself | `core/memory/dream.py` |
+| Consolidation | accepted dream proposals become durable entities. journal noise becomes memory | `core/memory/dream.py` |
+| Semantic search | optional hybrid assist, embeddings behind an env flag, FTS5 stays the primary path | `core/memory/embed.py` |
 
 ## Use Mnemos from any agent (MCP)
 
