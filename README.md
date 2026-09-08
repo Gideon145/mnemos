@@ -25,6 +25,9 @@ take it anywhere.
   <a href="https://x.com/mnemos_agent">
     <img src="https://img.shields.io/badge/X-@mnemos__agent-1DA1F2?style=for-the-badge&logo=x&logoColor=white" alt="X" />
   </a>
+  <a href="https://youtu.be/nIuuQLM8EZU">
+    <img src="https://img.shields.io/badge/Demo-video-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Demo video" />
+  </a>
   <a href="https://basescan.org/tx/0x1ed5b2674123e70a4de87ca9ceebad38f961fc6612c2206bb1456356ae46d194">
     <img src="https://img.shields.io/badge/Base-mainnet_tx-0052FF?style=for-the-badge" alt="Base mainnet tx" />
   </a>
@@ -51,6 +54,9 @@ one, and the journal is sealed with a hash chain anyone can verify.
 
 Both partner stacks ran on the final code, on real rails. Full captures and
 reproduction steps: [docs/VERIFICATION.md](docs/VERIFICATION.md).
+
+Watch the 4 minute demo:
+[![Demo video](https://img.shields.io/badge/YouTube-4_minute_demo-FF0000?style=flat-square&logo=youtube&logoColor=white)](https://youtu.be/nIuuQLM8EZU)
 
 | Stack | What ran | Live proof |
 |---|---|---|
@@ -502,7 +508,7 @@ tests.
 | Per-device private stores | shipped, survives reopen | `tests/test_mcp.py`, playground on trymnemos.xyz |
 | Waitlist with a live verifiable count | live | `POST /waitlist`, `GET /waitlist/count` |
 | Playground usage | live, verifiable | `GET /stats` (distinct devices) |
-| Demo video | pending | script in `docs/DEMO_SCRIPT.md` |
+| Demo video | live | [4 minute walkthrough on YouTube](https://youtu.be/nIuuQLM8EZU) |
 | Semantic/vector search | deliberately not shipped | recall is FTS + deterministic fallback |
 | Production auth on the hosted endpoint | deliberately not claimed | demo surface |
 
@@ -523,6 +529,7 @@ first:
 | Sep 5 | [Sibyl's reply](https://x.com/sibylcap/status/2096360556244435138) | the gate's tedious part, called out by the sponsor |
 | Sep 6 | [The gates are open](https://x.com/mnemos_agent/status/2096512756631454011) | trymnemos.xyz, live waitlist and usage stats, per-device memory, Claude bridge |
 | Sep 7 | [The same request, refused then paid](https://x.com/mnemos_agent/status/2096980736544846236) | the gate story in one request: refused while only agreed, paid once delivered |
+| Sep 8 | [Demo video](https://youtu.be/nIuuQLM8EZU) | the 4 minute walkthrough: teach, connect Claude, revise, the money |
 
 The money milestone is on-chain, in the verified table up top: the gate
 refused a payment while the agreement was only agreed, then executed it
